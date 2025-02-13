@@ -24,7 +24,9 @@ private: // private functions
     void load_mesh(); // load mesh from file
     void setup_system(); // initialize mass and stiffness matrices
     void assemble_mass_and_stiffness_matrices(); // assemble the mass and stiffness matrices
-    void assemble_system(); // assemble the system to be solved by combining the mass and stiffness matrices and applying the boundary conditions
+    void assemble_matrix();
+    void assemble_rhs();
+    void assemble_system(); // assemble the system to be solved by combining the mass and stiffness matrices, the right-hand-side and applying the boundary conditions
     void solve(); // solve the system sol=lhs\rhs
 
 private: 

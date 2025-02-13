@@ -146,9 +146,36 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
     // 
 }
 
-void HelmholtzSolver::assemble_system() {
+void HelmholtzSolver::assemble_matrix() {
     // regroup mass and stiffness matrix using the coefficient
     m_lhs.reinit(m_sparsity_pattern);
-    m_lhs.add(m_coef,m_mass_matrix);
-    m_lhs.add(CDOUBLE(1.0,0.0),m_stiffness_matrix);
+    m_lhs.add(m_coef,m_mass_matrix); // mass matrix
+    m_lhs.add(CDOUBLE(1.0,0.0),m_stiffness_matrix); // add stiffness matrix
+}
+
+void HelmholtzSolver::assemble_rhs() {
+    // initialize the right-hand-side
+    m_rhs.reinit(m_dof_handler.n_dofs());
+    // quadrature formula
+    dealii::QGaussSimplex<2> quadrature_formula(m_fe.degree+1);
+    dealii::FEValues<2> fe_values(fe,quadrature_formula,dealii::update_values | dealii::update_JxW_values | dealii::update_quadrature_points);
+}
+
+void HelmholtzSolver::assemble_system() {
+    assemble_matrix();
+    assemble_rhs();
+    // apply bc
+    m_sol.reinit(m_dof_handler.n_dofs());
+    dealii::MatrixTools::apply_boundary_values(m_boundary_values,m_lhs,m_sol,m_rhs);
+}
+
+void HelmholtzSolver::solve() {
+    // create solver based on UMFPack library
+    dealii::SparseDirectUMFPACK solver;
+    // factorize the matrix and discard ownership of lhs
+    solver.factorize(std::move(m_lhs));
+    // solve
+    solver.solve(m_rhs);
+    // move result to the solution vector
+    m_sol = std::move(m_rhs);
 }
