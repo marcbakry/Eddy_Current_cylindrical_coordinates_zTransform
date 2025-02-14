@@ -31,6 +31,13 @@ void ECZTransform::compute_z_quadrature_nodes() {
     }
 }
 
+std::vector<CDOUBLE> ECZTransform::compute_source_z_transform_for_z(CDOUBLE _z) const {
+    // 
+    // auto source_zt = std::vector<CDOUBLE>(m_source_pars.size());
+    // 
+    return std::vector<CDOUBLE>();
+}
+
 // -------
 // SETTERS
 // -------

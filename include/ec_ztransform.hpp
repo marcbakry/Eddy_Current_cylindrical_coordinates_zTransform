@@ -32,6 +32,7 @@ private:
     // inner tools
     void compute_time_step();
     void compute_z_quadrature_nodes();
+    std::vector<CDOUBLE> compute_source_z_transform_for_z(CDOUBLE _z) const;
 
 private:
     // ------------------
@@ -39,7 +40,7 @@ private:
     // ------------------
     // everything model-related
     HelmholtzSolver m_hs; // the harmonic solver for each z-value
-    std::vector<double> m_source_pars; // for each subdomain, the source term
+    // std::vector<double> m_source_pars; // for each subdomain, the source term
     std::vector<PhysicalParameters> m_physical_pars;
 
     // everything time-discretisation-related
