@@ -91,6 +91,7 @@ void HelmholtzSolver::set_source_parameters(const std::vector<double> &_sp) {
 dealii::Vector<CDOUBLE> get_solution() const {
     if(!m_is_solved) {
         std::cout << "ERROR: HelmholtzSolver::get_solution(): trying to access a solution which has not yet been computed. Program will stop." << std::endl;
+        std::exit(EXIT_FAILURE);
     }
     return m_sol;
 }
