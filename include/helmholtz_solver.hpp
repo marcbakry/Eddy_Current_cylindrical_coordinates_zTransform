@@ -19,6 +19,9 @@ public:
     void set_coef(CDOUBLE _c);
     void set_source_parameters(const std::vector<double> &_sp);
 
+    // getters
+    dealii::Vector<CDOUBLE> get_solution() const;
+
 private: // private functions
     void print_mesh_info() const;
     void load_mesh(); // load mesh from file
@@ -48,6 +51,7 @@ private:
     std::vector<PhysicalParameters> m_physical_pars;
 
     bool m_print_mesh; // print mesh for debug or not
+    bool m_is_solved;
 };
 
 #endif

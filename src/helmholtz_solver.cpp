@@ -1,6 +1,6 @@
 #include "helmholtz_solver.hpp"
 
-HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef, const bool _print_mesh): m_physical_pars(_ppars), m_source_pars(_spars), m_coef(_coef), m_print_mesh(_print_mesh), m_fe(2), m_dof_handler(m_triangulation) {
+HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef, const bool _print_mesh): m_physical_pars(_ppars), m_source_pars(_spars), m_coef(_coef), m_print_mesh(_print_mesh), m_fe(2), m_dof_handler(m_triangulation), m_is_solver(false) {
     if(m_source_pars.size() != m_physical_pars.size())
     {
         throw std::invalid_argument("\nERROR: INVALID PARAMETER DEFINITION:\n\n        Physical parameters vector and source vector should have the same length");
@@ -74,6 +74,8 @@ void HelmholtzSolver::set_print_mesh(bool _pm) {
 
 void HelmholtzSolver::set_coef(CDOUBLE _c) {
     m_coef = _c;
+    // since the coefficient has been changed, the pb is new
+    m_is_solver = false;
 }
 
 void HelmholtzSolver::set_source_parameters(const std::vector<double> &_sp) {
@@ -82,6 +84,15 @@ void HelmholtzSolver::set_source_parameters(const std::vector<double> &_sp) {
         throw std::invalid_argument("\nERROR: INVALID PARAMETER DEFINITION:\n\n        Physical parameters vector and source vector should have the same length");
     }
     m_source_pars = _sp;
+    // since the source has been changed, one must solve again
+    m_is_solved = false;
+}
+
+dealii::Vector<CDOUBLE> get_solution() const {
+    if(!m_is_solved) {
+        std::cout << "ERROR: HelmholtzSolver::get_solution(): trying to access a solution which has not yet been computed. Program will stop." << std::endl;
+    }
+    return m_sol;
 }
 
 void HelmholtzSolver::setup_system() {
@@ -159,6 +170,27 @@ void HelmholtzSolver::assemble_rhs() {
     // quadrature formula
     dealii::QGaussSimplex<2> quadrature_formula(m_fe.degree+1);
     dealii::FEValues<2> fe_values(fe,quadrature_formula,dealii::update_values | dealii::update_JxW_values | dealii::update_quadrature_points);
+    const auto dofs_per_cell = m_fe.n_dofs_per_cell();
+    dealii::Vector<CDOUBLE> cell_rhs(dofs_per_cell);
+    std::vector<dealii::types::global_dof_index> local_dof_indices(dofs_per_cell);
+    // loop over all cells
+    for(const auto &cell: m_dof_handler.active_cell_iterators()) {
+        // compute values at quadrature nodes for the current cell
+        fe_values.reinit(cell);
+        cell_rhs = CDOUBLE(0.0,0.0);
+        // loop over quadrature nodes
+        for(const auto q: fe_values.quadrature_point_indices()) {
+            // loop over test functions
+            for(const auto i: fe_values.dof_indices()) {
+                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*fe_values.quadrature_point(q)[0]*fe_values.JxW(q);
+            }
+        }
+        // put value in the global right-hand-side
+        cell->get_dof_indices(local_dof_indices);
+        for(const auto i: fe_values.dof_indices()) {
+            m_rhs(local_dof_indices[i]) += cell_rhs(i);
+        }
+    }
 }
 
 void HelmholtzSolver::assemble_system() {
@@ -172,10 +204,12 @@ void HelmholtzSolver::assemble_system() {
 void HelmholtzSolver::solve() {
     // create solver based on UMFPack library
     dealii::SparseDirectUMFPACK solver;
-    // factorize the matrix and discard ownership of lhs
+    // factorize the matrix and discard ownership of lhs, m_lhs value is unvalidated
     solver.factorize(std::move(m_lhs));
     // solve
     solver.solve(m_rhs);
-    // move result to the solution vector
+    // move result to the solution vector, m_rhs value is invalidated
     m_sol = std::move(m_rhs);
+    // pb has been solver
+    m_is_solver = true;
 }
