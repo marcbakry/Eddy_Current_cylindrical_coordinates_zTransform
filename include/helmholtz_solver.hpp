@@ -20,6 +20,12 @@ public:
 
     // getters
     dealii::Vector<CDOUBLE> get_solution() const;
+    dealii::Triangulation<2> get_mesh() const;
+    int get_n_dofs() const;
+
+    // others
+    void run();
+    std::tuple<std::vector<CDOUBLE>,std::vector<CDOUBLE>,std::vector<CDOUBLE>> compte_A_and_B_at(std::vector<dealii::Point<2> &_p); // compute the potential A and the magnetic field B for multiple points
 
 private: // private functions
     void print_mesh_info() const;

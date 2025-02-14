@@ -75,7 +75,7 @@ void HelmholtzSolver::set_print_mesh(bool _pm) {
 void HelmholtzSolver::set_coef(CDOUBLE _c) {
     m_coef = _c;
     // since the coefficient has been changed, the pb is new
-    m_is_solver = false;
+    m_is_solved = false;
 }
 
 void HelmholtzSolver::set_source_parameters(const std::vector<double> &_sp) {
@@ -88,12 +88,20 @@ void HelmholtzSolver::set_source_parameters(const std::vector<double> &_sp) {
     m_is_solved = false;
 }
 
-dealii::Vector<CDOUBLE> get_solution() const {
+dealii::Vector<CDOUBLE> HelmholtzSolver::get_solution() const {
     if(!m_is_solved) {
         std::cout << "ERROR: HelmholtzSolver::get_solution(): trying to access a solution which has not yet been computed. Program will stop." << std::endl;
         std::exit(EXIT_FAILURE);
     }
     return m_sol;
+}
+
+dealii::Triangulation<2> HelmholtzSolver::get_mesh() const {
+    return m_triangulation;
+}
+
+int HelmholtzSolver::get_n_dofs() const {
+    return m_dof_handler.n_dofs();
 }
 
 void HelmholtzSolver::setup_system() {
@@ -212,5 +220,20 @@ void HelmholtzSolver::solve() {
     // move result to the solution vector, m_rhs value is invalidated
     m_sol = std::move(m_rhs);
     // pb has been solver
-    m_is_solver = true;
+    m_is_solved = true;
+}
+
+void HelmholtzSolver::run() {
+    assemble_system();
+    solve();
+}
+
+std::tuple<std::vector<CDOUBLE>,std::vector<CDOUBLE>,std::vector<CDOUBLE>> HelmholtzSolver::compte_A_and_B_at(std::vector<dealii::Point<2> &_p) {
+    // initialize the outputs
+    auto valA = std::vector<CDOUBLE>(_p.size());
+    auto valBr = std::vector<CDOUBLE>(_p.size());
+    auto valBz = std::vector<CDOUBLE>(_p.size());
+    // EN CONSTRUCTION
+    // 
+    return std::make_tuple(valA,valBr,valBz);
 }

@@ -7,11 +7,16 @@
 
 #include "defs.hpp"
 #include "defs_dealii.hpp"
+#include "source_parameters.hpp"
 #include "physical_parameters.hpp"
 #include "helmholtz_solver.hpp"
 
 class ECZTransform {
 public:
+    ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp);
+
+    // 
+    void run();
 private:
     // getters
     int get_n_time_steps() const;
@@ -33,6 +38,12 @@ private:
     void compute_time_step();
     void compute_z_quadrature_nodes();
     std::vector<CDOUBLE> compute_source_z_transform_for_z(CDOUBLE _z) const;
+    dealii::Vector<CDOUBLE> solve_for_z(CDOUBLE _z);
+    void solve_for_all_z();
+    dealii::Vector<double> compute_nth_time_step(int _n) const; // compute the n-th time step
+    void compute_time_domain();
+
+    void reinitialize(); // reset all inner data, for example when setting a new time value
 
 private:
     // ------------------
@@ -40,7 +51,7 @@ private:
     // ------------------
     // everything model-related
     HelmholtzSolver m_hs; // the harmonic solver for each z-value
-    // std::vector<double> m_source_pars; // for each subdomain, the source term
+    std::vector<SourceParameters> m_source_pars; // for each subdomain, the source term
     std::vector<PhysicalParameters> m_physical_pars;
 
     // everything time-discretisation-related
@@ -52,6 +63,16 @@ private:
     int m_nz; // number of z-quadrature nodes
     double m_lambda; // the radius of the integration contour
     std::vector<CDOUBLE> m_z; // the z-quadrature nodes
+    std::vector<CDOUBLE> m_z_symmetrical; // symmetrical nodes with respect to the real axis
+    std::vector<CDOUBLE> m_z_nonsymmetrical; // non symmetrical nodes
+
+    // solutions in z- and time-domain
+    std::vector<dealii::Vector<double>> m_time_solution;
+    std::vector<dealii::Vector<CDOUBLE>> m_z_solution_symmetrical; // see above
+    std::vector<dealii::Vector<CDOUBLE>> m_z_solution_nonsymmetrical;
+
+    bool m_is_z_computed;
+    bool m_is_time_computed;
 };
 
 #endif

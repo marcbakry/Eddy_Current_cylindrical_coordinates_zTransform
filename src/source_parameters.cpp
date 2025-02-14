@@ -17,6 +17,7 @@ SourceParameters::SourceParameters(std::vector<double> const &_j, std::vector<do
 }
 
 double SourceParameters::compute(double _t) {
+    // naive implementation, assuming not too many time intervals
     for(const auto i=0; i<m_t.size()-1; ++i) {
         if(_t >= m_t[i] && _t < m_t[i+1]) return m_j[i];
     }
