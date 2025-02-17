@@ -3,7 +3,7 @@
 // -----------
 // CONSTRUCTOR
 // -----------
-ECZTransform::ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp) {
+ECZTransform::ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> const &_obsp): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp) {
     // initialize time step and z quadrature rule
     compute_time_step();
     compute_z_quadrature_nodes();

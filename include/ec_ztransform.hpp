@@ -14,7 +14,7 @@
 
 class ECZTransform {
 public:
-    ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp);
+    ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> const &_obsp);
 
     // 
     void run();
