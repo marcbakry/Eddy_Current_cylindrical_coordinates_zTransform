@@ -40,8 +40,12 @@ private:
     std::vector<CDOUBLE> compute_source_z_transform_for_z(CDOUBLE _z) const;
     dealii::Vector<CDOUBLE> solve_for_z(CDOUBLE _z);
     void solve_for_all_z();
-    dealii::Vector<double> compute_nth_time_step(int _n) const; // compute the n-th time step
-    void compute_time_domain();
+
+    dealii::Vector<double> compute_solution_nth_time_step(int _n) const; // compute the n-th time step
+    void compute_solution_time_domain();
+
+    std::vector<std::tuple<double,double,double>> compute_observable_nth_time_step(int _n) const; // compute the observables at the n-th time step
+    void compute_observable_time_domain();
 
     void reinitialize(); // reset all inner data, for example when setting a new time value
 
@@ -70,9 +74,16 @@ private:
     std::vector<dealii::Vector<double>> m_time_solution;
     std::vector<dealii::Vector<CDOUBLE>> m_z_solution_symmetrical; // see above
     std::vector<dealii::Vector<CDOUBLE>> m_z_solution_nonsymmetrical;
+    // observables in z- and time-domain
+    std::vector<dealii::Point<2>> m_observation_points;
+    std::vector<std::vector<std::tuple<double,double,double>>> m_time_observable;
+    std::vector<std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>> m_z_observable_symmetrical;
+    std::vector<std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>> m_z_observable_nonsymmetrical;
+
 
     bool m_is_z_computed;
     bool m_is_time_computed;
+    bool m_is_time_observable_computed;
 };
 
 #endif

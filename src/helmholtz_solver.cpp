@@ -228,12 +228,28 @@ void HelmholtzSolver::run() {
     solve();
 }
 
-std::tuple<std::vector<CDOUBLE>,std::vector<CDOUBLE>,std::vector<CDOUBLE>> HelmholtzSolver::compte_A_and_B_at(std::vector<dealii::Point<2> &_p) {
+std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B_at(std::vector<dealii::Point<2> &_points) {
+    // check that the solution has been computed
+    if(!m_is_solved) {
+        std::cout << "ERROR: HelmholtzSolver::compute_A_and_B_at(): the solution has not yet been computed. The program will exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
     // initialize the outputs
-    auto valA = std::vector<CDOUBLE>(_p.size());
-    auto valBr = std::vector<CDOUBLE>(_p.size());
-    auto valBz = std::vector<CDOUBLE>(_p.size());
-    // EN CONSTRUCTION
+    auto output = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>().clear().reserve(_p.size());
+    // version 1 using  dealii tools
+    for(auto ip=0; ip<_points.size(); ip++) {
+        auto &p = _points.at(ip);
+        // compute potential
+        auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p);
+        // compute Br and Bz
+        auto sol_grad = dealii::VectorTools::point_gradient(m_dof_handler,m_sol,p);
+        valBr -= sol_grad[1]; // Br = -\partial_z A
+        valBz += 1.0/p[0]*(valA[ip] + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
+        output.push_back(std::make_tuple(valA,valBr,valBz));
+    }
+    // maybe another version by projecting the node on the cell then evaluating
+    // the local basis functions and derivatives and combining with the local
+    // nodal values
     // 
-    return std::make_tuple(valA,valBr,valBz);
+    return output;
 }

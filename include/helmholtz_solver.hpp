@@ -25,7 +25,7 @@ public:
 
     // others
     void run();
-    std::tuple<std::vector<CDOUBLE>,std::vector<CDOUBLE>,std::vector<CDOUBLE>> compte_A_and_B_at(std::vector<dealii::Point<2> &_p); // compute the potential A and the magnetic field B for multiple points
+    std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> compte_A_and_B_at(std::vector<dealii::Point<2> &_points); // compute the potential A and the magnetic field B for multiple points
 
 private: // private functions
     void print_mesh_info() const;
