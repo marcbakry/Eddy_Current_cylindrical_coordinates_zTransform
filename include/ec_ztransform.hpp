@@ -2,6 +2,7 @@
 #define EC_ZTRANSFORM_HPP
 
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <vector>
 
@@ -46,6 +47,8 @@ private:
 
     std::vector<std::tuple<double,double,double>> compute_observable_nth_time_step(int _n) const; // compute the observables at the n-th time step
     void compute_observable_time_domain();
+
+    void write_observables(std::string _filename) const; // write fields in *.csv format with double precision
 
     void reinitialize(); // reset all inner data, for example when setting a new time value
 

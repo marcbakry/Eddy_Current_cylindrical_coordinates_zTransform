@@ -25,6 +25,7 @@ void ECZTransform::run() {
     // gather results in time domain
     compute_observable_time_domain();
     // write outputs
+    write_observables();
 }
 
 void ECZTransform::solve_for_all_z() {
@@ -238,6 +239,21 @@ void ECZTransform::reinitialize() {
     m_is_time_observable_computed = false;
     m_is_time_computed = false; 
     m_is_z_computed = false; 
+}
+
+void ECZTransform::write_observables(std::string _filename) const {
+    // open and write to file
+    std::ofstream ofile;
+    ofile.open(_filename);
+    if(!ofile.is_open()) {
+        std::cout << "ERROR: ECZTransform::write_observables(): could not open file '" << _filename << "'. The program will exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    ofile << "A; Br; Bz" << std::endl;
+    for(const auto &obs: m_time_observable) {
+        ofile << std::get<0>(obs) << ";" << std::get<1>(obs) << ";" << std::get<2>(obs) << std::endl;
+    }
+    ofile.close();
 }
 
 // -------
