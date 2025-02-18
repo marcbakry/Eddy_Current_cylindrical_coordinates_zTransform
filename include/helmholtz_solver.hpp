@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include "defs.hpp"
 #include "defs_dealii.hpp"
@@ -16,16 +17,15 @@ public:
     // setters
     void set_print_mesh(bool _pm);
     void set_coef(CDOUBLE _c);
-    void set_source_parameters(const std::vector<double> &_sp);
+    void set_source_parameters(const std::vector<CDOUBLE> &_sp);
 
     // getters
     dealii::Vector<CDOUBLE> get_solution() const;
-    dealii::Triangulation<2> get_mesh() const;
     int get_n_dofs() const;
 
     // others
     void run();
-    std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> compte_A_and_B_at(std::vector<dealii::Point<2> &_points); // compute the potential A and the magnetic field B for multiple points
+    std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> compte_A_and_B_at(std::vector<dealii::Point<2>> &_points); // compute the potential A and the magnetic field B for multiple points
 
 private: // private functions
     void print_mesh_info() const;

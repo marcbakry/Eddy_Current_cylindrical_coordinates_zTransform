@@ -1,6 +1,6 @@
 #include "helmholtz_solver.hpp"
 
-HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef, const bool _print_mesh): m_physical_pars(_ppars), m_source_pars(_spars), m_coef(_coef), m_print_mesh(_print_mesh), m_fe(2), m_dof_handler(m_triangulation), m_is_solver(false) {
+HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef, const bool _print_mesh): m_physical_pars(_ppars), m_source_pars(_spars), m_coef(_coef), m_print_mesh(_print_mesh), m_fe(2), m_dof_handler(m_triangulation), m_is_solved(false) {
     if(m_source_pars.size() != m_physical_pars.size())
     {
         throw std::invalid_argument("\nERROR: INVALID PARAMETER DEFINITION:\n\n        Physical parameters vector and source vector should have the same length");
@@ -78,7 +78,7 @@ void HelmholtzSolver::set_coef(CDOUBLE _c) {
     m_is_solved = false;
 }
 
-void HelmholtzSolver::set_source_parameters(const std::vector<double> &_sp) {
+void HelmholtzSolver::set_source_parameters(const std::vector<CDOUBLE> &_sp) {
     if(_sp.size() != m_physical_pars.size())
     {
         throw std::invalid_argument("\nERROR: INVALID PARAMETER DEFINITION:\n\n        Physical parameters vector and source vector should have the same length");
@@ -94,10 +94,6 @@ dealii::Vector<CDOUBLE> HelmholtzSolver::get_solution() const {
         std::exit(EXIT_FAILURE);
     }
     return m_sol;
-}
-
-dealii::Triangulation<2> HelmholtzSolver::get_mesh() const {
-    return m_triangulation;
 }
 
 int HelmholtzSolver::get_n_dofs() const {
@@ -116,13 +112,13 @@ void HelmholtzSolver::setup_system() {
     m_mass_matrix.reinit(m_sparsity_pattern);
     m_stiffness_matrix.reinit(m_sparsity_pattern);
     // interpolate the boundary values
-    dealii::VectorTools::interpolate_boundary_values(m_dof_handler,0,dealii::Functions::ZeroFunction<2>(),m_boundary_values);
+    dealii::VectorTools::interpolate_boundary_values(m_dof_handler,0,dealii::Functions::ZeroFunction<2,CDOUBLE>(),m_boundary_values);
 }
 
 void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
     // initialize quadrature rule and the tool 
     // to compute the fe values (shape functions, jacobian, etc.)
-    dealii::QGaussSimplex<3> quad(m_fe.degree+1);
+    dealii::QGaussSimplex<2> quad(m_fe.degree+1);
     dealii::FEValues<2> fe_values(m_fe,quad,dealii::update_values | dealii::update_gradients | dealii::update_JxW_values | dealii::update_quadrature_points);
     // vector to store the local->global dof
     const auto dofs_per_cell = m_fe.n_dofs_per_cell();
@@ -150,7 +146,7 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
                     // compute local mass matrix
                     cell_mass_matrix(i,j) += fe_values.shape_value(j,q)*fe_values.shape_value(i,q)*xq[0]*JxW*sigma;
                     // compute the local stiffness matrix
-                    cell_stiffness_matrix(i,j) += (fe_values.shape_grad(i,q)[1]*fe_values.shape_grad(j,q)[1]  1.0/(xq[0]*xq[0])*(fe_values.shape_value(i,q)+xq[0]*fe_values.shape_grad(i,q)[0])*(fe_values.shape_value(j,q)+xq[0]*fe_values.shape_grad(j,q)[0]))*xq[0]*JxW*nu;
+                    cell_stiffness_matrix(i,j) += (fe_values.shape_grad(i,q)[1]*fe_values.shape_grad(j,q)[1] + 1.0/(xq[0]*xq[0])*(fe_values.shape_value(i,q)+xq[0]*fe_values.shape_grad(i,q)[0])*(fe_values.shape_value(j,q)+xq[0]*fe_values.shape_grad(j,q)[0]))*xq[0]*JxW*nu;
                 }
             }
         }
@@ -158,8 +154,8 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
         cell->get_dof_indices(local_dof_indices);
         for(const auto i: fe_values.dof_indices()) {
             for(const auto j: fe_values.dof_indices()) {
-                m_mass_matrix.ad(local_dof_indices[i],local_dof_indices[j],cell_mass_matrix(i,j));
-                m_stiffness_matrix.ad(local_dof_indices[i],local_dof_indices[j],cell_stiffness_matrix(i,j));
+                m_mass_matrix.add(local_dof_indices[i],local_dof_indices[j],cell_mass_matrix(i,j));
+                m_stiffness_matrix.add(local_dof_indices[i],local_dof_indices[j],cell_stiffness_matrix(i,j));
             }
         }
     }
@@ -178,7 +174,7 @@ void HelmholtzSolver::assemble_rhs() {
     m_rhs.reinit(m_dof_handler.n_dofs());
     // quadrature formula
     dealii::QGaussSimplex<2> quadrature_formula(m_fe.degree+1);
-    dealii::FEValues<2> fe_values(fe,quadrature_formula,dealii::update_values | dealii::update_JxW_values | dealii::update_quadrature_points);
+    dealii::FEValues<2> fe_values(m_fe,quadrature_formula,dealii::update_values | dealii::update_JxW_values | dealii::update_quadrature_points);
     const auto dofs_per_cell = m_fe.n_dofs_per_cell();
     dealii::Vector<CDOUBLE> cell_rhs(dofs_per_cell);
     std::vector<dealii::types::global_dof_index> local_dof_indices(dofs_per_cell);
@@ -228,14 +224,16 @@ void HelmholtzSolver::run() {
     solve();
 }
 
-std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B_at(std::vector<dealii::Point<2> &_points) {
+std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B_at(std::vector<dealii::Point<2>> &_points) {
     // check that the solution has been computed
     if(!m_is_solved) {
         std::cout << "ERROR: HelmholtzSolver::compute_A_and_B_at(): the solution has not yet been computed. The program will exit..." << std::endl;
         std::exit(EXIT_FAILURE);
     }
     // initialize the outputs
-    auto output = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>().clear().reserve(_p.size());
+    auto output = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>();
+    output.clear();
+    output.reserve(_points.size());
     // version 1 using  dealii tools
     for(auto ip=0; ip<_points.size(); ip++) {
         auto &p = _points.at(ip);
@@ -243,8 +241,8 @@ std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B
         auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p);
         // compute Br and Bz
         auto sol_grad = dealii::VectorTools::point_gradient(m_dof_handler,m_sol,p);
-        valBr -= sol_grad[1]; // Br = -\partial_z A
-        valBz += 1.0/p[0]*(valA[ip] + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
+        auto valBr = -sol_grad[1]; // Br = -\partial_z A
+        auto valBz = 1.0/p[0]*(valA + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
         output.push_back(std::make_tuple(valA,valBr,valBz));
     }
     // maybe another version by projecting the node on the cell then evaluating

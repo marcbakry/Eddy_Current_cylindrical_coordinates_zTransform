@@ -34,15 +34,13 @@ project(eddy_solver LANGUAGES CXX)
 find_package(TBB HINTS TBB_CMAKE_DIR)
 
 add_executable(exe_eddy_solveur ./src/main.cpp)
-target_sources(exe_eddy_solveur PUBLIC ./src/eddysolver.cpp ./src/physical_parameters.cpp ./src/zparameters.cpp ./src/source_parameters.cpp)
-# target_sources(exe_eddy_solveur PUBLIC ./src/eddysolver.cpp ./src/physical_parameters.cpp ./src/mumps_solver.cpp)
-target_include_directories(exe_eddy_solveur PUBLIC ./include ../../../libs/libmumps/include)
+# target_sources(exe_eddy_solveur PUBLIC ./src/ec_ztransform.cpp ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
+target_sources(exe_eddy_solveur PUBLIC ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
+target_include_directories(exe_eddy_solveur PUBLIC ./include)
 
 deal_ii_setup_target(exe_eddy_solveur)
 
-# TARGET_LINK_LIBRARIES(exe_eddy_solveur TBB::tbb ${METIS_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 TARGET_LINK_LIBRARIES(exe_eddy_solveur TBB::tbb)
-# TARGET_LINK_LIBRARIES(exe_eddy_solveur TBB::tbb ../../../../libs/libmumps/lib/dmumps ../../../../libs/libmumps/lib/mumps_common ../../../../libs/libmumps/lib/pord ../../../../libs/libmumps/lib/mpiseq)
 
 if(WIN32)
     set_property(TARGET exe_eddy_solveur PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")

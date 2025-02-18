@@ -1,6 +1,7 @@
 #ifndef SOURCE_PARAMETERS_HPP
 #define SOURCE_PARAMETERS_HPP
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 
@@ -20,6 +21,6 @@ public:
 private:
     std::vector<double> m_j;
     std::vector<double> m_t;
-}
+};
 
 #endif

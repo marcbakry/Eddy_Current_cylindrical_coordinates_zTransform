@@ -1,7 +1,5 @@
 #include <iostream>
 
-#include "eddysolver.hpp"
-
 int main()
 {
     std::cout << "+--------------------------------------+" << std::endl;
@@ -19,7 +17,7 @@ int main()
     // {
     //     std::cerr << e.what() << '\n';
     //     return EXIT_FAILURE;
-    }
+    // }
     //
     return EXIT_SUCCESS;
 }
