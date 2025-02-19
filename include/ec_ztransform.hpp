@@ -38,7 +38,7 @@ private:
     // inner tools
     void compute_time_step();
     void compute_z_quadrature_nodes();
-    std::vector<CDOUBLE> compute_source_z_transform_for_z(CDOUBLE _z) const;
+    std::vector<CDOUBLE> compute_source_z_transform_for_z(CDOUBLE _z);
     dealii::Vector<CDOUBLE> solve_for_z(CDOUBLE _z);
     void solve_for_all_z();
 

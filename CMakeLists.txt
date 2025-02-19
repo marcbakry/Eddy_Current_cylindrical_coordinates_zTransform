@@ -34,8 +34,8 @@ project(eddy_solver LANGUAGES CXX)
 find_package(TBB HINTS TBB_CMAKE_DIR)
 
 add_executable(exe_eddy_solveur ./src/main.cpp)
-# target_sources(exe_eddy_solveur PUBLIC ./src/ec_ztransform.cpp ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
-target_sources(exe_eddy_solveur PUBLIC ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
+target_sources(exe_eddy_solveur PUBLIC ./src/ec_ztransform.cpp ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
+# target_sources(exe_eddy_solveur PUBLIC ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
 target_include_directories(exe_eddy_solveur PUBLIC ./include)
 
 deal_ii_setup_target(exe_eddy_solveur)

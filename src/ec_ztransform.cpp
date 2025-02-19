@@ -3,13 +3,10 @@
 // -----------
 // CONSTRUCTOR
 // -----------
-ECZTransform::ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> const &_obsp): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp) {
+ECZTransform::ECZTransform(const int _nt, const double _tf, const int _nz, const double _radius, const std::vector<PhysicalParameters> &_pp, const std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> const &_obsp): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(m_source_pars.size())) {
     // initialize time step and z quadrature rule
     compute_time_step();
     compute_z_quadrature_nodes();
-
-    // initialize Helmholtz solver
-    m_hs = HelmholtzSolver(m_physical_pars,std::vector<CDOUBLE>(m_source_pars.size()));
 
     m_is_time_computed = false;
     m_is_time_computed = false;
@@ -25,7 +22,7 @@ void ECZTransform::run() {
     // gather results in time domain
     compute_observable_time_domain();
     // write outputs
-    write_observables();
+    write_observables("../data/time_ecdata.csv");
 }
 
 void ECZTransform::solve_for_all_z() {
@@ -68,24 +65,24 @@ void ECZTransform::compute_solution_time_domain() {
 dealii::Vector<double> ECZTransform::compute_solution_nth_time_step(int _n) const {
     // case initial step
     if(_n == 0) {
-        return Vector<double>(m_hs.get_n_dofs());
+        return dealii::Vector<double>(m_hs.get_n_dofs());
     }
     // other
     auto coef = 1.0/static_cast<double>(m_nz);
     auto res_cmplx = dealii::Vector<CDOUBLE>(m_hs.get_n_dofs());
     // add non-symmetrical
-    for(auto iz=0; iz<m_z_nonsymmetrical.size()) {
+    for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) {
         auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n);
-        res_cmplx += m_z_solution_nonsymmetrical.at(iz)/zn;
+        res_cmplx.add(1.0/zn, m_z_solution_nonsymmetrical.at(iz));
     }
     // add symmetrical
-    for(auto iz=0; iz<m_z_symmetrical.size()) {
+    for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) {
         auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n);
         // compute complex conjugate
         auto zn_bar = std::conj(zn);
         auto sol_bar = dealii::Vector<CDOUBLE>(m_hs.get_n_dofs());
-        for(auto i=0; i<m_hs.get_n_dofs(); ++i) sol_bar(i) = std::conj(m_z_solution_symmetrical.at(iz).at(i));
-        res_cmplx += (m_z_solution_symmetrical.at(iz)/zn + sol_bar/zn_bar);
+        for(auto i=0; i<m_hs.get_n_dofs(); ++i) sol_bar(i) = std::conj(m_z_solution_symmetrical.at(iz)(i));
+        res_cmplx.add(1.0/zn, m_z_solution_symmetrical.at(iz), 1.0/zn_bar, sol_bar);
     }
     // 
     auto res = dealii::Vector<double>(m_hs.get_n_dofs());
@@ -118,7 +115,7 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
     auto coef = 1.0/static_cast<double>(m_nz);
     auto obs_cmplx = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>(np);
     // add non-symmetrical
-    for(auto iz=0; iz<m_z_non_symmetrical.size()) {
+    for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) {
         auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n);
         // loop over all nodes
         for(auto i=0; i<np; ++i) {
@@ -129,7 +126,7 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
         }
     }
     // add symmetrical
-    for(auto iz=0; iz<m_z_symmetrical.size()) {
+    for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) {
         auto zn = std::pow(m_z_symmetrical.at(iz),_n);
         // compute complex conjugate
         auto zn_bar = std::conj(zn);
@@ -144,7 +141,7 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
         }
     }
     // get real part
-    auto obs = std::vector<std::tuple<double,double,double>>().clear().reserve(np);
+    auto obs = std::vector<std::tuple<double,double,double>>();obs.clear(); obs.reserve(np);
     for(auto i=0; i<np; ++i) {
         obs.push_back(std::make_tuple(std::get<0>(obs_cmplx.at(i)).real()*coef,std::get<1>(obs_cmplx.at(i)).real()*coef,std::get<2>(obs_cmplx.at(i)).real()*coef));
     }
@@ -152,13 +149,13 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
     return obs;
 }
 
-dealii::Vector<CDOUBLE> ECZTransform::solve_for_z(CDOUBLE _z) const {
+dealii::Vector<CDOUBLE> ECZTransform::solve_for_z(CDOUBLE _z) {
     // initialize  z-dependent data
     auto sp   = compute_source_z_transform_for_z(_z);
     auto coef = (CDOUBLE(1.0,0.0) - _z)/m_dt;
     // update the solver
     m_hs.set_source_parameters(sp);
-    m_hs.set_coef(sp);
+    m_hs.set_coef(coef);
     // compute the solution and extract it
     m_hs.run();
     return m_hs.get_solution();
@@ -190,7 +187,7 @@ void ECZTransform::compute_z_quadrature_nodes() {
     }
     auto twopi = 2.0*std::acos(-1.0);
     m_z = std::vector<CDOUBLE>(m_nz);
-    for(const auto iz=0; iz<m_nz; ++iz) {
+    for(auto iz=0; iz<m_nz; ++iz) {
         m_z[iz] = m_lambda*std::exp(CDOUBLE(0.0,twopi*static_cast<double>(iz)/static_cast<double>(m_nz)));
     }
     // now split into symmetrical and non-symmetrical nodes
@@ -208,7 +205,7 @@ void ECZTransform::compute_z_quadrature_nodes() {
     }
 }
 
-std::vector<CDOUBLE> ECZTransform::compute_source_z_transform_for_z(CDOUBLE _z) const {
+std::vector<CDOUBLE> ECZTransform::compute_source_z_transform_for_z(CDOUBLE _z) {
     // 
     auto source_zt = std::vector<CDOUBLE>(m_source_pars.size());
     auto zc = CDOUBLE(1.0,0.0);
@@ -242,18 +239,20 @@ void ECZTransform::reinitialize() {
 }
 
 void ECZTransform::write_observables(std::string _filename) const {
-    // open and write to file
-    std::ofstream ofile;
-    ofile.open(_filename);
-    if(!ofile.is_open()) {
-        std::cout << "ERROR: ECZTransform::write_observables(): could not open file '" << _filename << "'. The program will exit..." << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-    ofile << "A; Br; Bz" << std::endl;
-    for(const auto &obs: m_time_observable) {
-        ofile << std::get<0>(obs) << ";" << std::get<1>(obs) << ";" << std::get<2>(obs) << std::endl;
-    }
-    ofile.close();
+    // // open and write to file
+    // std::ofstream ofile;
+    // ofile.open(_filename);
+    // if(!ofile.is_open()) {
+    //     std::cout << "ERROR: ECZTransform::write_observables(): could not open file '" << _filename << "'. The program will exit..." << std::endl;
+    //     std::exit(EXIT_FAILURE);
+    // }
+    // ofile << "A; Br; Bz" << std::endl;
+    // for(const auto &obs: m_time_observable) {
+    //     ofile << std::get<0>(obs) << ";" << std::get<1>(obs) << ";" << std::get<2>(obs) << std::endl;
+    // }
+    // ofile.close();
+
+    // UNDER CONSTRUCTION
 }
 
 // -------
