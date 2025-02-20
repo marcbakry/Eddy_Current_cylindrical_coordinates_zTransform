@@ -356,7 +356,7 @@ void ECZTransform::write_quadrature_nodes() const {
     }
     // loop over quadrature nodes
     for(auto z: m_z) {
-        std::cout << z.real() << ";" << z.imag() << std::endl;
+        ofile << z.real() << ";" << z.imag() << std::endl;
     }
     // 
     ofile.close();
