@@ -31,6 +31,7 @@ int main()
         // initialize the solver
         auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true);
         // run computations
+        eczt.run();
     }
     catch(const std::exception& e)
     {

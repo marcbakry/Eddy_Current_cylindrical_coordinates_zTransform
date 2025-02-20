@@ -6,12 +6,15 @@ HelmholtzSolver::HelmholtzSolver(std::vector<PhysicalParameters> &_ppars, std::v
     m_print_mesh = _print_mesh;
     m_physical_pars = _ppars; 
     m_source_pars = _spars;
-    load_mesh();
 
     if(m_source_pars.size() != m_physical_pars.size())
     {
         throw std::invalid_argument("\nERROR: INVALID PARAMETER DEFINITION:\n\n        Physical parameters vector and source vector should have the same length");
     }
+
+    load_mesh();
+    setup_system();
+    assemble_mass_and_stiffness_matrices();
 }
 
 void HelmholtzSolver::print_mesh_info() const
@@ -192,9 +195,10 @@ void HelmholtzSolver::assemble_rhs() {
         cell_rhs = CDOUBLE(0.0,0.0);
         // loop over quadrature nodes
         for(const auto q: fe_values.quadrature_point_indices()) {
+            auto xq = fe_values.quadrature_point(q);
             // loop over test functions
             for(const auto i: fe_values.dof_indices()) {
-                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*fe_values.quadrature_point(q)[0]*fe_values.JxW(q);
+                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*fe_values.quadrature_point(q)[0]*xq[0]*fe_values.JxW(q);
             }
         }
         // put value in the global right-hand-side
@@ -203,13 +207,18 @@ void HelmholtzSolver::assemble_rhs() {
             m_rhs(local_dof_indices[i]) += cell_rhs(i);
         }
     }
+    std::exit(EXIT_FAILURE);
 }
 
 void HelmholtzSolver::assemble_system() {
+    std::cout << "        assembling lhs" << std::endl;
     assemble_matrix();
+    std::cout << "        assembling rhs" << std::endl;
     assemble_rhs();
     // apply bc
+    std::cout << "        initializing solution" << std::endl;
     m_sol.reinit(m_dof_handler.n_dofs());
+    std::cout << "        applying bc" << std::endl;
     dealii::MatrixTools::apply_boundary_values(m_boundary_values,m_lhs,m_sol,m_rhs);
 }
 
@@ -227,7 +236,9 @@ void HelmholtzSolver::solve() {
 }
 
 void HelmholtzSolver::run() {
+    std::cout << "    assembling" << std::endl;
     assemble_system();
+    std::cout << "    solving" << std::endl;
     solve();
 }
 
