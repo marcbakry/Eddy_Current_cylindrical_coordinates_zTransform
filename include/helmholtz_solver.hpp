@@ -12,8 +12,8 @@
 
 class HelmholtzSolver {
 public:
-    HelmholtzSolver(): m_fe(2) {}
-    HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef=CDOUBLE(0.0,0.0), const bool _print_mesh=false);
+    HelmholtzSolver(): m_fe(2), m_dof_handler(m_triangulation), m_print_mesh(false), m_coef(CDOUBLE(0.0,0.0)) {}
+    HelmholtzSolver(std::vector<PhysicalParameters> &_ppars, std::vector<CDOUBLE> &_spars, CDOUBLE _coef=CDOUBLE(0.0,0.0), bool _print_mesh=false);
 
     // setters
     void set_print_mesh(bool _pm);

@@ -1,6 +1,12 @@
 #include "helmholtz_solver.hpp"
 
-HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef, const bool _print_mesh): m_physical_pars(_ppars), m_source_pars(_spars), m_coef(_coef), m_print_mesh(_print_mesh), m_fe(2), m_dof_handler(m_triangulation), m_is_solved(false) {
+// HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef, const bool _print_mesh): m_physical_pars(_ppars), m_source_pars(_spars), m_coef(_coef), m_print_mesh(_print_mesh), m_fe(2), m_dof_handler(m_triangulation), m_is_solved(false) {
+HelmholtzSolver::HelmholtzSolver(std::vector<PhysicalParameters> &_ppars, std::vector<CDOUBLE> &_spars, CDOUBLE _coef, bool _print_mesh): m_fe(2), m_dof_handler(m_triangulation), m_is_solved(false) {
+    m_coef = _coef;
+    m_print_mesh = _print_mesh;
+    m_physical_pars = _ppars; 
+    m_source_pars = _spars;
+
     if(m_source_pars.size() != m_physical_pars.size())
     {
         throw std::invalid_argument("\nERROR: INVALID PARAMETER DEFINITION:\n\n        Physical parameters vector and source vector should have the same length");
