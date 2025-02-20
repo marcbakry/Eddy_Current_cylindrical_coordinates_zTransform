@@ -22,7 +22,7 @@ void ECZTransform::run() {
     // gather results in time domain
     compute_observable_time_domain();
     // write outputs
-    write_observables("../data/time_ecdata.csv");
+    write_observables("../data/time_ecdata");
 }
 
 void ECZTransform::solve_for_all_z() {
@@ -239,20 +239,29 @@ void ECZTransform::reinitialize() {
 }
 
 void ECZTransform::write_observables(std::string _filename) const {
-    // // open and write to file
-    // std::ofstream ofile;
-    // ofile.open(_filename);
-    // if(!ofile.is_open()) {
-    //     std::cout << "ERROR: ECZTransform::write_observables(): could not open file '" << _filename << "'. The program will exit..." << std::endl;
-    //     std::exit(EXIT_FAILURE);
-    // }
-    // ofile << "A; Br; Bz" << std::endl;
-    // for(const auto &obs: m_time_observable) {
-    //     ofile << std::get<0>(obs) << ";" << std::get<1>(obs) << ";" << std::get<2>(obs) << std::endl;
-    // }
-    // ofile.close();
-
-    // UNDER CONSTRUCTION
+    // The output will be writtent in as many files as there are observation points
+    // first we open all the files with a nX_ suffix where X is the number of the node
+    auto nn = m_observation_points.size();
+    auto files = std::vector<std::ofstream>(); files.clear();
+    for(auto i=0; i<nn; ++i) {
+        auto new_filename = _filename + "_n" + std::to_string(i) + ".csv";
+        files.push_back(std::ofstream());
+        files.back().open(new_filename);
+        if(!files.back().is_open()) {
+            std::cout << "ERROR: ECZTransform::write_observables(): could not open file '" << new_filename << "'. The program will exit..." << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+        files.back() << "A; Br; Bz" << std::endl;
+    }
+    // Now loop over all time steps
+    for(const auto &e: m_time_observable) { // e is a vector of tuples, one per observation node
+        for(auto i=0; i<nn; ++i) { // 0: A, 1: Br, 2: Bz
+            files[i] << std::get<0>(e[i]) << ";" << std::get<1>(e[i]) << ";" << std::get<2>(e[i]) << std::endl;
+        }
+    }
+    // Close all files
+    for(auto i=0; i<nn; ++i) files[i].close();
+    // Done
 }
 
 // -------
