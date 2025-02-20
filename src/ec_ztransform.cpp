@@ -3,7 +3,7 @@
 // -----------
 // CONSTRUCTOR
 // -----------
-ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp, bool _verbose): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))), m_verbose(_verbose) {
+ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp, bool _verbose, bool _debug_info): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))), m_verbose(_verbose), m_debug_info(_debug_info) {
     // initialize time step and z quadrature rule
     if(m_verbose) std::cout << "ECZT: Initializing solver" << std::endl;
     compute_time_step();

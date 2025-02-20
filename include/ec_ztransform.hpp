@@ -14,7 +14,7 @@
 
 class ECZTransform {
 public:
-    ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp = std::vector<dealii::Point<2>>(), bool _verbose=false);
+    ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp = std::vector<dealii::Point<2>>(), bool _verbose=false, bool _debug_info=false);
 
     // 
     void run();
@@ -86,6 +86,7 @@ private:
 
 
     bool m_verbose;
+    bool m_debug_info;
     bool m_is_z_computed;
     bool m_is_time_computed;
     bool m_is_time_observable_computed;

@@ -29,7 +29,7 @@ int main()
         // observation nodes
         auto obsp = std::vector<dealii::Point<2>>({dealii::Point<2>(0.1,0.0)});
         // initialize the solver
-        auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true);
+        auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true,true);
         // run computations
         eczt.run();
     }
