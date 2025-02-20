@@ -281,10 +281,12 @@ void ECZTransform::write_observables(std::string _filename) const {
         files.back() << "A; Br; Bz" << std::endl;
     }
     // Now loop over all time steps
+    auto current_time = 0.0;
     for(const auto &e: m_time_observable) { // e is a vector of tuples, one per observation node
         for(auto i=0; i<nn; ++i) { // 0: A, 1: Br, 2: Bz
-            files[i] << std::get<0>(e[i]) << ";" << std::get<1>(e[i]) << ";" << std::get<2>(e[i]) << std::endl;
+            files[i] << current_time << ";" << std::get<0>(e[i]) << ";" << std::get<1>(e[i]) << ";" << std::get<2>(e[i]) << std::endl;
         }
+        current_time += m_dt;
     }
     // Close all files
     for(auto i=0; i<nn; ++i) files[i].close();
