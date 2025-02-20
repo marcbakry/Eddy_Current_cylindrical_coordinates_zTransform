@@ -54,7 +54,8 @@ void ECZTransform::solve_for_all_z() {
     if(m_verbose) std::cout << "ECZT: Solving for symmetrical z" << std::endl;
     int i=0;
     for(auto z: m_z_symmetrical) {
-        if(m_verbose) std::cout << "- " << i++ << " / " << m_z_symmetrical.size() << std::endl;
+        if(m_verbose) std::cout << "- " << i+1 << " / " << m_z_symmetrical.size() << std::endl;
+        ++i;
         m_z_solution_symmetrical.push_back(solve_for_z(z));
         m_z_observable_symmetrical.push_back(m_hs.compte_A_and_B_at(m_observation_points));
     }
@@ -62,7 +63,8 @@ void ECZTransform::solve_for_all_z() {
     if(m_verbose) std::cout << "ECZT: Solving for non-symmetrical z" << std::endl;
     i = 0;
     for(auto z: m_z_nonsymmetrical) {
-        if(m_verbose) std::cout << "- " << i++ << " / " << m_z_nonsymmetrical.size() << std::endl;
+        if(m_verbose) std::cout << "- " << i+1 << " / " << m_z_nonsymmetrical.size() << std::endl;
+        ++i;
         m_z_solution_nonsymmetrical.push_back(solve_for_z(z));
         m_z_observable_nonsymmetrical.push_back(m_hs.compte_A_and_B_at(m_observation_points));
     }
@@ -225,6 +227,8 @@ void ECZTransform::compute_z_quadrature_nodes() {
         m_z_symmetrical.reserve(mid-1);
         for(auto iz=1; iz<mid; ++iz) m_z_symmetrical.push_back(m_z.at(iz));
     }
+    // debug ?
+    if(m_debug_info) write_quadrature_nodes();
 }
 
 std::vector<CDOUBLE> ECZTransform::compute_source_z_transform_for_z(CDOUBLE _z) {
@@ -335,4 +339,25 @@ double ECZTransform::get_z_integration_radius() const {
 
 std::vector<CDOUBLE> ECZTransform::get_z_quadrature_nodes() const {
     return m_z;
+}
+
+// ---------------
+// DEBUG FUNCTIONS
+// ---------------
+void ECZTransform::write_quadrature_nodes() const {
+    // 
+    std::string filename("../output/quadrature_nodes.csv");
+    // 
+    std::ofstream ofile;
+    ofile.open(filename);
+    if(!ofile.is_open()) {
+        std::cout << "ERROR: ECZTransform::write_quadrature_nodes(): could not open file '" << filename << "'. The program will exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    // loop over quadrature nodes
+    for(auto z: m_z) {
+        std::cout << z.real() << ";" << z.imag() << std::endl;
+    }
+    // 
+    ofile.close();
 }

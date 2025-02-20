@@ -53,6 +53,9 @@ private:
 
     void reinitialize(); // reset all inner data, for example when setting a new time value
 
+    // debug functions
+    void write_quadrature_nodes() const;
+
 private:
     // ------------------
     // private attributes
