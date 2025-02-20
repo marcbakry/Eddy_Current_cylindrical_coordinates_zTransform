@@ -10,24 +10,26 @@ int main()
     std::cout << "|   CALCUL D'UN PROBLEME COURANTS DE   |" << std::endl;
     std::cout << "| FOUCAULT EN COORDONNEES CYLINDRIQUES |" << std::endl;
     std::cout << "+--------------------------------------+" << std::endl;
+    // creating physical parameters
     auto phy_pars = std::vector<PhysicalParameters>({PhysicalParameters(1000.0,1.0),PhysicalParameters(1000.0,1.0),PhysicalParameters(1000.0,1.0),PhysicalParameters(1000.0,1.0)});
-    // auto source_pars = {0.0,0.0,1.0,-1.0};
+    // source intensities
     auto source_pars = std::vector<SourceParameters>({
-        SourceParameters(std::vector<double>({0.0}),std::vector<double>({0.0})),
-        SourceParameters(std::vector<double>({0.0}),std::vector<double>({0.0})),
-        SourceParameters(std::vector<double>({1.0}),std::vector<double>({0.0})),
-        SourceParameters(std::vector<double>({-1.0}),std::vector<double>({0.0})),
+        SourceParameters({0.0},{0.0}),
+        SourceParameters({0.0},{0.0}),
+        SourceParameters({1.0},{0.0}),
+        SourceParameters({-1.0},{0.0}),
     });
+    // run the computation
     try
     {
         auto nt = 20;
         auto tf = 20.0*1e-3;
         auto nz = 2*nt;
         auto r  = 1.0;
-        // creation des points d'observation
-        auto obsp = std::vector<dealii::Point<2>>();
-        // creation du solveur temporel
-        auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp);
+        // observation nodes
+        auto obsp = std::vector<dealii::Point<2>>({dealii::Point<2>(0.1,0.0)});
+        // initialize the solver
+        auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true);
         // run computations
     }
     catch(const std::exception& e)
@@ -35,6 +37,6 @@ int main()
         std::cerr << e.what() << '\n';
         return EXIT_FAILURE;
     }
-    //
+    // the end
     return EXIT_SUCCESS;
 }

@@ -6,6 +6,7 @@ HelmholtzSolver::HelmholtzSolver(std::vector<PhysicalParameters> &_ppars, std::v
     m_print_mesh = _print_mesh;
     m_physical_pars = _ppars; 
     m_source_pars = _spars;
+    load_mesh();
 
     if(m_source_pars.size() != m_physical_pars.size())
     {

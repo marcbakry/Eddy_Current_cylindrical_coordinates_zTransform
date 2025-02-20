@@ -14,10 +14,11 @@
 
 class ECZTransform {
 public:
-    ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp = std::vector<dealii::Point<2>>());
+    ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp = std::vector<dealii::Point<2>>(), bool _verbose=false);
 
     // 
     void run();
+    void display_solver_info() const;
 private:
     // getters
     int get_n_time_steps() const;
@@ -84,6 +85,7 @@ private:
     std::vector<std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>> m_z_observable_nonsymmetrical;
 
 
+    bool m_verbose;
     bool m_is_z_computed;
     bool m_is_time_computed;
     bool m_is_time_observable_computed;

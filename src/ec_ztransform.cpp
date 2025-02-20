@@ -3,20 +3,23 @@
 // -----------
 // CONSTRUCTOR
 // -----------
-ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))) {
+ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp, bool _verbose): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))), m_verbose(_verbose) {
     // initialize time step and z quadrature rule
+    if(m_verbose) std::cout << "ECZT: Initializing solver" << std::endl;
     compute_time_step();
     compute_z_quadrature_nodes();
 
     m_is_time_computed = false;
     m_is_time_computed = false;
     m_is_time_observable_computed = false;
+    display_solver_info();
 }
 
 // -------
 // METHODS
 // -------
 void ECZTransform::run() {
+    if(m_verbose) std::cout << "ECZT: Running..." << std::endl;
     // loop over all z
     solve_for_all_z();
     // gather results in time domain
@@ -25,7 +28,18 @@ void ECZTransform::run() {
     write_observables("../data/time_ecdata");
 }
 
+void ECZTransform::display_solver_info() const {
+    // 
+    std::cout << "- Time span         : " << m_tf << " (s)" << std::endl;
+    std::cout << "- Time step         : " << m_dt << " (s)" << std::endl;
+    std::cout << "- Nb. of time steps : " << m_nt << std::endl;
+    std::cout << "- Nb. of quad nodes : " << m_nz << std::endl;
+    std::cout << "- Integration radius: " << m_lambda << std::endl;
+    std::cout << "- Nb. of obs. points: " << m_observation_points.size() << std::endl;
+}
+
 void ECZTransform::solve_for_all_z() {
+    if(m_verbose) std::cout << "ECZT: Solving all Helmholtz problems" << std::endl;
     // clear solution vectors
     m_z_solution_symmetrical.clear();
     m_z_solution_nonsymmetrical.clear();
@@ -37,12 +51,18 @@ void ECZTransform::solve_for_all_z() {
     m_z_observable_symmetrical.reserve(m_z_symmetrical.size());
     m_z_observable_nonsymmetrical.reserve(m_z_nonsymmetrical.size());
     // compute for all symmetrical z
+    if(m_verbose) std::cout << "ECZT: Solving for symmetrical z" << std::endl;
+    int i=0;
     for(auto z: m_z_symmetrical) {
+        if(m_verbose) std::cout << "- " << i++ << " / " << m_z_symmetrical.size() << std::endl;
         m_z_solution_symmetrical.push_back(solve_for_z(z));
         m_z_observable_symmetrical.push_back(m_hs.compte_A_and_B_at(m_observation_points));
     }
     // compute for all non symmetrical z
+    if(m_verbose) std::cout << "ECZT: Solving for non-symmetrical z" << std::endl;
+    i = 0;
     for(auto z: m_z_nonsymmetrical) {
+        if(m_verbose) std::cout << "- " << i++ << " / " << m_z_nonsymmetrical.size() << std::endl;
         m_z_solution_nonsymmetrical.push_back(solve_for_z(z));
         m_z_observable_nonsymmetrical.push_back(m_hs.compte_A_and_B_at(m_observation_points));
     }
@@ -51,6 +71,7 @@ void ECZTransform::solve_for_all_z() {
 }
 
 void ECZTransform::compute_solution_time_domain() {
+    if(m_verbose) std::cout << "ECZT: Compute solution in the time domain" << std::endl;
     if(!m_is_z_computed) {
         std::cout << "ERROR: ECZTransform::compute_solution_time_domain(): solutions in the z-domain must first be computed before going back to time domain. Program will exit." << std::endl;
         std::exit(EXIT_FAILURE);
@@ -94,6 +115,7 @@ dealii::Vector<double> ECZTransform::compute_solution_nth_time_step(int _n) cons
 }
 
 void ECZTransform::compute_observable_time_domain() {
+    if(m_verbose) std::cout << "ECZT: Compute fields in the time domain" << std::endl;
     if(!m_is_z_computed) {
         std::cout << "ERROR: ECZTransform::compute_observable_time_domain(): solutions in the z-domain must first be computed before going back to time domain. Program will exit." << std::endl;
         std::exit(EXIT_FAILURE);
@@ -241,6 +263,7 @@ void ECZTransform::reinitialize() {
 void ECZTransform::write_observables(std::string _filename) const {
     // The output will be writtent in as many files as there are observation points
     // first we open all the files with a nX_ suffix where X is the number of the node
+    if(m_verbose) std::cout << "ECZT: Writing outputs" << std::endl;
     auto nn = m_observation_points.size();
     auto files = std::vector<std::ofstream>(); files.clear();
     for(auto i=0; i<nn; ++i) {
