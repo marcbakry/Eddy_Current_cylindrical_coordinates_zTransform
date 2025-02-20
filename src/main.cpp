@@ -22,7 +22,7 @@ int main()
     // run the computation
     try
     {
-        auto nt = 20;
+        auto nt = 200;
         auto tf = 20.0*1e-3;
         auto nz = 2*nt;
         auto r  = 1.0;

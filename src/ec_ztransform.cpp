@@ -25,7 +25,7 @@ void ECZTransform::run() {
     // gather results in time domain
     compute_observable_time_domain();
     // write outputs
-    write_observables("../data/time_ecdata");
+    write_observables("../output/time_ecdata");
 }
 
 void ECZTransform::display_solver_info() const {
@@ -173,19 +173,13 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
 
 dealii::Vector<CDOUBLE> ECZTransform::solve_for_z(CDOUBLE _z) {
     // initialize  z-dependent data
-    std::cout << "compute source" << std::endl;
     auto sp   = compute_source_z_transform_for_z(_z);
-    std::cout << "compute coef" << std::endl;
     auto coef = (CDOUBLE(1.0,0.0) - _z)/m_dt;
     // update the solver
-    std::cout << "set source" << std::endl;
     m_hs.set_source_parameters(sp);
-    std::cout << "set coef" << std::endl;
     m_hs.set_coef(coef);
     // compute the solution and extract it
-    std::cout << "solve" << std::endl;
     m_hs.run();
-    std::cout << "extract solution" << std::endl;
     return m_hs.get_solution();
 }
 

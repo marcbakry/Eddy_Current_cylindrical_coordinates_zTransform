@@ -207,18 +207,13 @@ void HelmholtzSolver::assemble_rhs() {
             m_rhs(local_dof_indices[i]) += cell_rhs(i);
         }
     }
-    std::exit(EXIT_FAILURE);
 }
 
 void HelmholtzSolver::assemble_system() {
-    std::cout << "        assembling lhs" << std::endl;
     assemble_matrix();
-    std::cout << "        assembling rhs" << std::endl;
     assemble_rhs();
     // apply bc
-    std::cout << "        initializing solution" << std::endl;
     m_sol.reinit(m_dof_handler.n_dofs());
-    std::cout << "        applying bc" << std::endl;
     dealii::MatrixTools::apply_boundary_values(m_boundary_values,m_lhs,m_sol,m_rhs);
 }
 
@@ -236,9 +231,7 @@ void HelmholtzSolver::solve() {
 }
 
 void HelmholtzSolver::run() {
-    std::cout << "    assembling" << std::endl;
     assemble_system();
-    std::cout << "    solving" << std::endl;
     solve();
 }
 
