@@ -66,7 +66,7 @@ void HelmholtzSolver::load_mesh()
 
     if(m_print_mesh)
     {
-        auto check_file = std::string("../data/mesh_check.vtk");
+        auto check_file = std::string("../output/mesh_check.vtk");
         std::cout << "Writing mesh for check: '" << check_file << "' ";
         std::ofstream output_stream(check_file);
         dealii::GridOut gridout;

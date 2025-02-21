@@ -278,7 +278,7 @@ void ECZTransform::write_observables(std::string _filename) const {
             std::cout << "ERROR: ECZTransform::write_observables(): could not open file '" << new_filename << "'. The program will exit..." << std::endl;
             std::exit(EXIT_FAILURE);
         }
-        files.back() << "A; Br; Bz" << std::endl;
+        files.back() << "Time; A; Br; Bz" << std::endl;
     }
     // Now loop over all time steps
     auto current_time = 0.0;

@@ -11,7 +11,7 @@ int main()
     std::cout << "| FOUCAULT EN COORDONNEES CYLINDRIQUES |" << std::endl;
     std::cout << "+--------------------------------------+" << std::endl;
     // creating physical parameters
-    auto phy_pars = std::vector<PhysicalParameters>({PhysicalParameters(1000.0,1.0),PhysicalParameters(1000.0,1.0),PhysicalParameters(1000.0,1.0),PhysicalParameters(1000.0,1.0)});
+    auto phy_pars = std::vector<PhysicalParameters>({PhysicalParameters(5000000.0,1.0),PhysicalParameters(0.0,1.0),PhysicalParameters(50000000.0,1.0),PhysicalParameters(50000000.0,1.0)});
     // source intensities
     auto source_pars = std::vector<SourceParameters>({
         SourceParameters({0.0},{0.0}),
