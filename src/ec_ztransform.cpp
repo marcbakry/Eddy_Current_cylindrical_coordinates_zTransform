@@ -96,11 +96,15 @@ dealii::Vector<double> ECZTransform::compute_solution_nth_time_step(int _n) cons
     // add non-symmetrical
     for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) {
         auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n);
+        // auto z  = m_z_nonsymmetrical.at(iz);
+        // auto zn = pow_z(z,_n);
         res_cmplx.add(1.0/zn, m_z_solution_nonsymmetrical.at(iz));
     }
     // add symmetrical
     for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) {
         auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n);
+        // auto z  = m_z_nonsymmetrical.at(iz);
+        // auto zn = pow_z(z,_n);
         // compute complex conjugate
         auto zn_bar = std::conj(zn);
         auto sol_bar = dealii::Vector<CDOUBLE>(m_hs.get_n_dofs());
@@ -136,36 +140,39 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
         return std::vector<std::tuple<double,double,double>>(np,std::make_tuple(0.0,0.0,0.0));
     }
     // other
-    auto coef = 1.0/static_cast<double>(m_nz);
-    auto obs_cmplx = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>(np);
+    auto coef        = 1.0/static_cast<double>(m_nz);
+    auto obs_cmplx_0 = std::make_tuple(C0,C0,C0);
+    auto obs_cmplx   = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>(np,obs_cmplx_0);
     // add non-symmetrical
-    for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) {
-        auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n);
+    for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) { // loop over nonsymmetrical quadrature nodes
+        // auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n); // zn^{_n}
+        auto z  = m_z_nonsymmetrical.at(iz);
+        auto zn = pow_z(z,_n);
         // loop over all nodes
         for(auto i=0; i<np; ++i) {
-            auto &obs = m_z_observable_nonsymmetrical.at(iz).at(i);
-            std::get<0>(obs_cmplx[i]) += std::get<0>(obs)/zn;
-            std::get<1>(obs_cmplx[i]) += std::get<1>(obs)/zn;
-            std::get<2>(obs_cmplx[i]) += std::get<2>(obs)/zn;
+            auto &obs = m_z_observable_nonsymmetrical.at(iz).at(i); // observables corresponding to the i-th node for the iz-th nonsymmetrical z
+            std::get<0>(obs_cmplx[i]) += std::get<0>(obs)/zn; // A
+            std::get<1>(obs_cmplx[i]) += std::get<1>(obs)/zn; // Br
+            std::get<2>(obs_cmplx[i]) += std::get<2>(obs)/zn; // Bz
         }
     }
     // add symmetrical
-    for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) {
-        auto zn = std::pow(m_z_symmetrical.at(iz),_n);
-        // compute complex conjugate
-        auto zn_bar = std::conj(zn);
+    for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) { // loop over symmetrical quadrature nodes
+        // auto zn     = std::pow(m_z_symmetrical.at(iz),_n); // zn^{_n}
+        auto z  = m_z_symmetrical.at(iz);
+        auto zn = pow_z(z,_n);
+        auto zn_bar = std::conj(zn); // compute complex conjugate of zn
         // loop over all nodes
         for(auto i=0; i<np; ++i) {
-            auto &obs = m_z_observable_symmetrical.at(iz).at(i);
+            auto &obs = m_z_observable_symmetrical.at(iz).at(i); // observables corresponding to the i-th node for the iz-th symmetrical z
             // compute complex conjugate
-            auto obs_bar = std::make_tuple(std::conj(std::get<0>(obs)),std::conj(std::get<1>(obs)),std::conj(std::get<2>(obs)));
-            std::get<0>(obs_cmplx[i]) += std::get<0>(obs)/zn + std::get<0>(obs_bar)/zn_bar;
-            std::get<1>(obs_cmplx[i]) += std::get<1>(obs)/zn + std::get<1>(obs_bar)/zn_bar;
-            std::get<2>(obs_cmplx[i]) += std::get<2>(obs)/zn + std::get<2>(obs_bar)/zn_bar;
+            std::get<0>(obs_cmplx[i]) += std::get<0>(obs)/zn + std::conj(std::get<0>(obs))/zn_bar;
+            std::get<1>(obs_cmplx[i]) += std::get<1>(obs)/zn + std::conj(std::get<1>(obs))/zn_bar;
+            std::get<2>(obs_cmplx[i]) += std::get<2>(obs)/zn + std::conj(std::get<2>(obs))/zn_bar;
         }
     }
     // get real part
-    auto obs = std::vector<std::tuple<double,double,double>>();obs.clear(); obs.reserve(np);
+    auto obs = std::vector<std::tuple<double,double,double>>(); obs.clear(); obs.reserve(np);
     for(auto i=0; i<np; ++i) {
         obs.push_back(std::make_tuple(std::get<0>(obs_cmplx.at(i)).real()*coef,std::get<1>(obs_cmplx.at(i)).real()*coef,std::get<2>(obs_cmplx.at(i)).real()*coef));
     }
@@ -233,7 +240,7 @@ void ECZTransform::compute_z_quadrature_nodes() {
 
 std::vector<CDOUBLE> ECZTransform::compute_source_z_transform_for_z(CDOUBLE _z) {
     // 
-    auto source_zt = std::vector<CDOUBLE>(m_source_pars.size());
+    auto source_zt = std::vector<CDOUBLE>(m_source_pars.size(),C0);
     auto zc = CDOUBLE(1.0,0.0);
     // loop over all time steps
     for(auto it=0; it<=m_nt; ++it) {
@@ -291,6 +298,12 @@ void ECZTransform::write_observables(std::string _filename) const {
     // Close all files
     for(auto i=0; i<nn; ++i) files[i].close();
     // Done
+}
+
+CDOUBLE ECZTransform::pow_z(CDOUBLE _z, int _n) const {
+    auto zn = CDOUBLE(1.0,0.0);
+    for(auto i=0; i<_n; ++i) zn *= _z;
+    return zn;
 }
 
 // -------

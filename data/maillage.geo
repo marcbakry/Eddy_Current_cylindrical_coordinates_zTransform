@@ -1,16 +1,18 @@
-l_z_axis = 0.1;
-l_bob    = 0.1;
-l_inf    = 1;
+mm = 1e-3;
+
+l_z_axis = 0.1*mm;
+l_bob    = 0.1*mm;
+l_inf    = 1*mm;
 
 // parametres de la plaque
-e = 1;  // epaisseur de la plaque
-L = 20; // longueur de la plaque
+e = 1*mm;  // epaisseur de la plaque
+L = 30*mm; // longueur de la plaque
 
 // parametres de la bobine
-entrefer = 0.2; // hauteur de la bobine au-dessus de la plaque
-r_int    = 3; // rayon interieur
-r_ext    = 5; // rayon exterieur
-h        = 1; // hauteur de la bobine
+entrefer = 1*mm; // hauteur de la bobine au-dessus de la plaque
+r_int    = 1*mm; // rayon interieur
+r_ext    = 2.65*mm; // rayon exterieur
+h        = 2*mm; // hauteur de la bobine
 z_bob    = e/2 + entrefer;
 
 ////////////

@@ -195,10 +195,10 @@ void HelmholtzSolver::assemble_rhs() {
         cell_rhs = CDOUBLE(0.0,0.0);
         // loop over quadrature nodes
         for(const auto q: fe_values.quadrature_point_indices()) {
-            auto xq = fe_values.quadrature_point(q);
+            auto &xq = fe_values.quadrature_point(q);
             // loop over test functions
             for(const auto i: fe_values.dof_indices()) {
-                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*fe_values.quadrature_point(q)[0]*xq[0]*fe_values.JxW(q);
+                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*xq[0]*fe_values.JxW(q);
             }
         }
         // put value in the global right-hand-side
@@ -221,11 +221,11 @@ void HelmholtzSolver::solve() {
     // create solver based on UMFPack library
     dealii::SparseDirectUMFPACK solver;
     // factorize the matrix and discard ownership of lhs, m_lhs value is unvalidated
-    solver.factorize(std::move(m_lhs));
+    solver.factorize(m_lhs);
     // solve
     solver.solve(m_rhs);
     // move result to the solution vector, m_rhs value is invalidated
-    m_sol = std::move(m_rhs);
+    m_sol = m_rhs;
     // pb has been solver
     m_is_solved = true;
 }
@@ -256,6 +256,8 @@ std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B
         auto valBz = 1.0/p[0]*(valA + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
         output.push_back(std::make_tuple(valA,valBr,valBz));
     }
+    // 
+    // std::cout << std::get<0>(output.back()) << " " << std::get<1>(output.back()) << " " << std::get<2>(output.back()) << std::endl;
     // maybe another version by projecting the node on the cell then evaluating
     // the local basis functions and derivatives and combining with the local
     // nodal values

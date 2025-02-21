@@ -19,7 +19,7 @@ public:
     // 
     void run();
     void display_solver_info() const;
-private:
+    
     // getters
     int get_n_time_steps() const;
     double get_final_time() const;
@@ -35,6 +35,7 @@ private:
     
     void set_n_z_nodes(int _nz);
     void set_integration_radius(double _lambda);
+private:
 
     // inner tools
     void compute_time_step();
@@ -52,6 +53,8 @@ private:
     void write_observables(std::string _filename) const; // write fields in *.csv format with double precision
 
     void reinitialize(); // reset all inner data, for example when setting a new time value
+
+    CDOUBLE pow_z(CDOUBLE _z, int _n) const;
 
     // debug functions
     void write_quadrature_nodes() const;
