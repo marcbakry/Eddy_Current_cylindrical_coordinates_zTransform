@@ -15,7 +15,7 @@ int main()
     auto sigma_piece  = 5000000.0;
     auto sigma_bobine = 50000000.0;
 
-    auto mu0 = 1.0/(4.0*std::acos(-1.0)*1e-7);
+    auto mu0 = 4.0*std::acos(-1.0)*1e-7;
     auto mur = 1.0;
 
     auto mu_piece  = mu0*mur;
