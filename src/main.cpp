@@ -23,10 +23,10 @@ int main()
     auto mu_bobine = mu0;
 
     auto phy_pars = std::vector<PhysicalParameters>({
-        PhysicalParameters(sigma_piece,mu_piece),
-        PhysicalParameters(sigma_air,mu_air),
-        PhysicalParameters(sigma_air,mu_air),
-        PhysicalParameters(sigma_bobine,mu_bobine)
+        PhysicalParameters(sigma_piece,1.0/mu_piece),
+        PhysicalParameters(sigma_air,1.0/mu_air),
+        PhysicalParameters(sigma_air,1.0/mu_air),
+        PhysicalParameters(sigma_bobine,1.0/mu_bobine)
     });
     // source intensities
     auto source_pars = std::vector<SourceParameters>({
@@ -40,7 +40,7 @@ int main()
     {
         auto mm = 1e-3;
         auto ms = 1e-3;
-        auto nt = 50;
+        auto nt = 200;
         auto tf = 0.5*ms;
         auto nz = 2*nt;
         auto r  = 1.0;
