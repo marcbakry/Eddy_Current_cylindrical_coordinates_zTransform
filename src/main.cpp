@@ -33,7 +33,7 @@ int main()
         SourceParameters({0.0},{0.0}), // plate
         SourceParameters({0.0},{0.0}), // air
         SourceParameters({0.0},{0.0}), // lower coil == air in our configuration
-        SourceParameters({1.0},{0.0}), // upper coil
+        SourceParameters({-1.0},{0.0}), // upper coil
     });
     // run the computation
     try
