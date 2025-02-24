@@ -35,6 +35,9 @@ public:
     
     void set_n_z_nodes(int _nz);
     void set_integration_radius(double _lambda);
+
+    void set_output_file_name(std::string _oname);
+
 private:
 
     // inner tools
@@ -50,7 +53,7 @@ private:
     std::vector<std::tuple<double,double,double>> compute_observable_nth_time_step(int _n) const; // compute the observables at the n-th time step
     void compute_observable_time_domain();
 
-    void write_observables(std::string _filename) const; // write fields in *.csv format with double precision
+    void write_observables() const; // write fields in *.csv format with double precision
 
     void reinitialize(); // reset all inner data, for example when setting a new time value
 
@@ -90,6 +93,8 @@ private:
     std::vector<std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>> m_z_observable_symmetrical;
     std::vector<std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>> m_z_observable_nonsymmetrical;
 
+    // misc
+    std::string m_oname; // output file
 
     bool m_verbose;
     bool m_debug_info;

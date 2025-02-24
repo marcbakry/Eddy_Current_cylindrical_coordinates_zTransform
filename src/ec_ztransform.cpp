@@ -3,7 +3,7 @@
 // -----------
 // CONSTRUCTOR
 // -----------
-ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp, bool _verbose, bool _debug_info): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))), m_verbose(_verbose), m_debug_info(_debug_info) {
+ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp, bool _verbose, bool _debug_info): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))), m_verbose(_verbose), m_debug_info(_debug_info), m_oname("../output/time_ecdata") {
     // initialize time step and z quadrature rule
     if(m_verbose) std::cout << "ECZT: Initializing solver" << std::endl;
     compute_time_step();
@@ -25,7 +25,7 @@ void ECZTransform::run() {
     // gather results in time domain
     compute_observable_time_domain();
     // write outputs
-    write_observables("../output/time_ecdata");
+    write_observables();
 }
 
 void ECZTransform::display_solver_info() const {
@@ -271,14 +271,14 @@ void ECZTransform::reinitialize() {
     m_is_z_computed = false; 
 }
 
-void ECZTransform::write_observables(std::string _filename) const {
+void ECZTransform::write_observables() const {
     // The output will be writtent in as many files as there are observation points
     // first we open all the files with a nX_ suffix where X is the number of the node
     if(m_verbose) std::cout << "ECZT: Writing outputs" << std::endl;
     auto nn = m_observation_points.size();
     auto files = std::vector<std::ofstream>(); files.clear();
     for(auto i=0; i<nn; ++i) {
-        auto new_filename = _filename + "_n" + std::to_string(i) + ".csv";
+        auto new_filename = m_oname + "_n" + std::to_string(i) + ".csv";
         files.push_back(std::ofstream());
         files.back().open(new_filename);
         if(!files.back().is_open()) {
@@ -327,6 +327,10 @@ void ECZTransform::set_n_z_nodes(int _nz) {
 void ECZTransform::set_integration_radius(double _lambda) {
     m_lambda = _lambda;
     compute_z_quadrature_nodes();
+}
+
+void ECZTransform::set_output_file_name(std::string _oname) {
+    m_oname = _oname;
 }
 
 // -------
