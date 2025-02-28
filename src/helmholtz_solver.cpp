@@ -192,7 +192,7 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
 void HelmholtzSolver::assemble_matrix() {
     // regroup mass and stiffness matrix using the coefficient
     m_lhs.reinit(m_sparsity_pattern);
-    m_lhs.add(m_coef,m_mass_matrix); // mass matrix
+    // m_lhs.add(m_coef,m_mass_matrix); // mass matrix
     m_lhs.add(CDOUBLE(1.0,0.0),m_stiffness_matrix); // add stiffness matrix
 }
 
