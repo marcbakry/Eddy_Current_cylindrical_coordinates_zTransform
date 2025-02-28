@@ -139,7 +139,7 @@ void HelmholtzSolver::setup_system() {
 void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
     // initialize quadrature rule and the tool 
     // to compute the fe values (shape functions, jacobian, etc.)
-    dealii::QGaussSimplex<2> quad(m_fe.degree+1);
+    dealii::QGaussSimplex<2> quad(4);
     dealii::FEValues<2> fe_values(m_fe,quad,dealii::update_values | dealii::update_gradients | dealii::update_JxW_values | dealii::update_quadrature_points);
     // vector to store the local->global dof
     const auto dofs_per_cell = m_fe.n_dofs_per_cell();
@@ -171,9 +171,9 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
 
                     // formulation with \tilde A = (r A)
                     // local mass matrix
-                    cell_mass_matrix(i,j) += sigma*(fe_values.shape_value(j,q)*fe_values.shape_value(i,q))/xq[0]*JxW;
+                    cell_mass_matrix(i,j) += sigma*(fe_values.shape_value(i,q)*fe_values.shape_value(j,q))/xq(0)*JxW;
                     // local stiffness matrix
-                    cell_stiffness_matrix(i,j) += nu*(fe_values.shape_grad(i,q)*fe_values.shape_grad(j,q))/xq[0]*JxW;
+                    cell_stiffness_matrix(i,j) += nu*(fe_values.shape_grad(i,q)*fe_values.shape_grad(j,q))/xq(0)*JxW;
                 }
             }
         }
@@ -200,7 +200,7 @@ void HelmholtzSolver::assemble_rhs() {
     // initialize the right-hand-side
     m_rhs.reinit(m_dof_handler.n_dofs());
     // quadrature formula
-    dealii::QGaussSimplex<2> quadrature_formula(m_fe.degree+1);
+    dealii::QGaussSimplex<2> quadrature_formula(4);
     dealii::FEValues<2> fe_values(m_fe,quadrature_formula,dealii::update_values | dealii::update_JxW_values | dealii::update_quadrature_points);
     const auto dofs_per_cell = m_fe.n_dofs_per_cell();
     dealii::Vector<CDOUBLE> cell_rhs(dofs_per_cell);
@@ -255,7 +255,7 @@ void HelmholtzSolver::run() {
     solve();
 }
 
-std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B_at(std::vector<dealii::Point<2>> &_points) {
+std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compute_A_and_B_at(std::vector<dealii::Point<2>> &_points) {
     // check that the solution has been computed
     if(!m_is_solved) {
         std::cout << "ERROR: HelmholtzSolver::compute_A_and_B_at(): the solution has not yet been computed. The program will exit..." << std::endl;
@@ -269,15 +269,21 @@ std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B
     for(auto ip=0; ip<_points.size(); ip++) {
         auto &p = _points.at(ip);
         // compute potential
-        // auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p);
-        auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p)/p[0]; // \tilde A = r A
-        // compute Br and Bz
-        auto sol_grad = dealii::VectorTools::point_gradient(m_dof_handler,m_sol,p);
-        // auto valBr = -sol_grad[1]; // Br = -\partial_z A
-        // auto valBz = 1.0/p[0]*(valA + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
-        auto valBr = -sol_grad[1]/p[0]; auto valBz = sol_grad[0]/p[0]; // \tilde A = r A
-        // add value to list
-        output.push_back(std::make_tuple(valA,valBr,valBz));
+        try {
+            // auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p);
+            auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p)/p(0); // \tilde A = r A
+            // compute Br and Bz
+            auto sol_grad = dealii::VectorTools::point_gradient(m_dof_handler,m_sol,p);
+            // auto valBr = -sol_grad[1]; // Br = -\partial_z A
+            // auto valBz = 1.0/p[0]*(valA + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
+            auto valBr = -sol_grad[1]/p(0); auto valBz = sol_grad[0]/p(0); // \tilde A = r A
+    
+            // add value to list
+            output.push_back(std::make_tuple(valA,valBr,valBz));
+        } catch(...) {
+            std::cout << "HelmholtzSolver::compute_A_and_B_at(): Point is not within the computational domain. Program will exit..." << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
     }
     // 
     // std::cout << std::get<0>(output.back()) << " " << std::get<1>(output.back()) << " " << std::get<2>(output.back()) << std::endl;
