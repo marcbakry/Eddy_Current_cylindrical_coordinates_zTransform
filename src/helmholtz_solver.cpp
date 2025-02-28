@@ -31,7 +31,18 @@ void HelmholtzSolver::print_mesh_info() const
     {
         std::cout << pair.first << " (" << pair.second << " times)" << std::endl;
     }
+    // material indicators
+    std::map<dealii::types::material_id,unsigned int> material_count;
+    for(const auto &cell: m_triangulation.active_cell_iterators()) {
+        material_count[cell->material_id()]++;
+    }
+    std::cout << "- material ids:" << std::endl;
+    for(const auto &pair: material_count) {
+        std::cout << "    " << pair.first << "(" << pair.second << " times)" << std::endl;
+    }
+    // 
     std::cout << std::endl;
+    // 
 }
 
 void HelmholtzSolver::load_mesh()
@@ -153,10 +164,16 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
             for(const auto i: fe_values.dof_indices()) {
                 // loop over basis functions
                 for(const auto j: fe_values.dof_indices()) {
-                    // compute local mass matrix
-                    cell_mass_matrix(i,j) += fe_values.shape_value(j,q)*fe_values.shape_value(i,q)*xq[0]*JxW*sigma;
-                    // compute the local stiffness matrix
-                    cell_stiffness_matrix(i,j) += (fe_values.shape_grad(i,q)[1]*fe_values.shape_grad(j,q)[1] + 1.0/(xq[0]*xq[0])*(fe_values.shape_value(i,q)+xq[0]*fe_values.shape_grad(i,q)[0])*(fe_values.shape_value(j,q)+xq[0]*fe_values.shape_grad(j,q)[0]))*xq[0]*JxW*nu;
+                    // // compute local mass matrix
+                    // cell_mass_matrix(i,j) += fe_values.shape_value(j,q)*fe_values.shape_value(i,q)*xq[0]*JxW*sigma;
+                    // // compute the local stiffness matrix
+                    // cell_stiffness_matrix(i,j) += (fe_values.shape_grad(i,q)[1]*fe_values.shape_grad(j,q)[1] + 1.0/(xq[0]*xq[0])*(fe_values.shape_value(i,q)+xq[0]*fe_values.shape_grad(i,q)[0])*(fe_values.shape_value(j,q)+xq[0]*fe_values.shape_grad(j,q)[0]))*xq[0]*JxW*nu;
+
+                    // formulation with \tilde A = (r A)
+                    // local mass matrix
+                    cell_mass_matrix(i,j) += sigma*(fe_values.shape_value(j,q)*fe_values.shape_value(i,q))/xq[0]*JxW;
+                    // local stiffness matrix
+                    cell_stiffness_matrix(i,j) += nu*(fe_values.shape_grad(i,q)*fe_values.shape_grad(j,q))/xq[0]*JxW;
                 }
             }
         }
@@ -198,7 +215,10 @@ void HelmholtzSolver::assemble_rhs() {
             auto &xq = fe_values.quadrature_point(q);
             // loop over test functions
             for(const auto i: fe_values.dof_indices()) {
-                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*xq[0]*fe_values.JxW(q);
+                // cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*xq[0]*fe_values.JxW(q);
+
+                // using \tilde A = (r A)
+                cell_rhs(i) += m_source_pars[cell->material_id()-1]*fe_values.shape_value(i,q)*fe_values.JxW(q);
             }
         }
         // put value in the global right-hand-side
@@ -249,11 +269,14 @@ std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> HelmholtzSolver::compte_A_and_B
     for(auto ip=0; ip<_points.size(); ip++) {
         auto &p = _points.at(ip);
         // compute potential
-        auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p);
+        // auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p);
+        auto valA = dealii::VectorTools::point_value(m_dof_handler,m_sol,p)/p[0]; // \tilde A = r A
         // compute Br and Bz
         auto sol_grad = dealii::VectorTools::point_gradient(m_dof_handler,m_sol,p);
-        auto valBr = -sol_grad[1]; // Br = -\partial_z A
-        auto valBz = 1.0/p[0]*(valA + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
+        // auto valBr = -sol_grad[1]; // Br = -\partial_z A
+        // auto valBz = 1.0/p[0]*(valA + p[0]*sol_grad[0]); // Bz = 1/r(A + r*\partial_r A)
+        auto valBr = -sol_grad[1]/p[0]; auto valBz = sol_grad[0]/p[0]; // \tilde A = r A
+        // add value to list
         output.push_back(std::make_tuple(valA,valBr,valBz));
     }
     // 

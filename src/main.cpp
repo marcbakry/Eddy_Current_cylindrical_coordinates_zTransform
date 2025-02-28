@@ -52,7 +52,8 @@ int main()
         // initialize the solver
         auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true,false);
         // run computations
-        for(auto coef: {1,2,4,6}) run_computation(eczt,nt,coef*nt,"../output/");
+        for(auto coef: {2}) run_computation(eczt,nt,coef*nt,"../output/");
+        // for(auto coef: {1,2,4,6}) run_computation(eczt,nt,coef*nt,"../output/");
     }
     catch(const std::exception& e)
     {
