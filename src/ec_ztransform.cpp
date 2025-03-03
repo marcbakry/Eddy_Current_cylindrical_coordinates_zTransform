@@ -58,7 +58,10 @@ void ECZTransform::solve_for_all_z() {
         ++i;
         m_z_solution_symmetrical.push_back(solve_for_z(z));
         m_z_observable_symmetrical.push_back(m_hs.compute_A_and_B_at(m_observation_points));
-        std::cout << "A = " << std::setprecision(std::numeric_limits<double>::max_digits10) << std::get<0>(m_z_observable_symmetrical.back()[0]) << std::endl; std::exit(EXIT_FAILURE);
+        // DEBUG
+        // std::cout << "A = " << std::setprecision(std::numeric_limits<double>::max_digits10) << std::get<0>(m_z_observable_symmetrical.back()[0]) << std::endl;(EXIT_FAILURE);
+        // if(i==2) std::exit(EXIT_FAILURE);
+        // ENDDEBUG
     }
     // compute for all non symmetrical z
     if(m_verbose) std::cout << "ECZT: Solving for non-symmetrical z" << std::endl;
@@ -186,11 +189,13 @@ dealii::Vector<CDOUBLE> ECZTransform::solve_for_z(CDOUBLE _z) {
     auto sp   = compute_source_z_transform_for_z(_z);
     auto coef = (CDOUBLE(1.0,0.0) - _z)/m_dt;
     // update the solver
-    std::cout << "- C = " << std::setprecision(std::numeric_limits<double>::max_digits10) << coef << std::endl;
-    for(auto s: sp) {
-        std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << s << ", ";
-    }
-    std::cout << std::endl;
+    // // DEBUG
+    // std::cout << "- C = " << std::setprecision(std::numeric_limits<double>::max_digits10) << coef << std::endl;
+    // for(auto s: sp) {
+    //     std::cout << std::setprecision(std::numeric_limits<double>::max_digits10) << s << ", ";
+    // }
+    // std::cout << std::endl;
+    // // ENDDEBUG
     // 
     m_hs.set_source_parameters(sp);
     m_hs.set_coef(coef);
