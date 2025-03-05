@@ -19,6 +19,8 @@ public:
     void set_print_mesh(bool _pm);
     void set_coef(CDOUBLE _c);
     void set_source_parameters(const std::vector<CDOUBLE> &_sp);
+    void set_rhs_vector(const dealii::Vector<CDOUBLE> &_rhs_vec);
+    void disable_rhs_vector();
 
     // getters
     dealii::Vector<CDOUBLE> get_solution() const;
@@ -50,6 +52,7 @@ private:
     dealii::SparseMatrix<CDOUBLE> m_lhs; // left-hand-side
     dealii::Vector<CDOUBLE> m_rhs; // right-hand-side
     dealii::Vector<CDOUBLE> m_sol; // solution
+    dealii::Vector<CDOUBLE> m_rhs_sol; // vector to be used in the right-hand-size
 
     // other attributes
     CDOUBLE m_coef; // coefficient
@@ -58,6 +61,7 @@ private:
 
     bool m_print_mesh; // print mesh for debug or not
     bool m_is_solved;
+    bool m_use_rhs_vec;
 };
 
 #endif

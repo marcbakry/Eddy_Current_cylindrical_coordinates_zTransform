@@ -5,7 +5,7 @@
 // -----------
 ECZTransform::ECZTransform(int _nt, double _tf, int _nz, double _radius, std::vector<PhysicalParameters> &_pp, std::vector<SourceParameters> &_sp, std::vector<dealii::Point<2>> &_obsp, bool _verbose, bool _debug_info): m_nt(_nt), m_tf(_tf), m_nz(_nz), m_lambda(_radius), m_physical_pars(_pp), m_source_pars(_sp), m_observation_points(_obsp), m_hs(_pp,std::vector<CDOUBLE>(_sp.size(),CDOUBLE(0.0,0.0))), m_verbose(_verbose), m_debug_info(_debug_info), m_oname("../output/time_ecdata") {
     // initialize time step and z quadrature rule
-    if(m_verbose) std::cout << "ECZT: Initializing solver" << std::endl;
+    if(m_verbose) std::cout << "ECZTransform: Initializing solver" << std::endl;
     compute_time_step();
     compute_z_quadrature_nodes();
 
@@ -282,7 +282,7 @@ void ECZTransform::reinitialize() {
 }
 
 void ECZTransform::write_observables() const {
-    // The output will be writtent in as many files as there are observation points
+    // The output will be written in as many files as there are observation points
     // first we open all the files with a nX_ suffix where X is the number of the node
     if(m_verbose) std::cout << "ECZT: Writing outputs" << std::endl;
     auto nn = m_observation_points.size();

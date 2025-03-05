@@ -9,6 +9,7 @@ HelmholtzSolver::HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, 
     load_mesh();
     setup_system();
     assemble_mass_and_stiffness_matrices();
+    m_use_rhs_vec = false;
 }
 
 void HelmholtzSolver::print_mesh_info() const
@@ -103,6 +104,20 @@ void HelmholtzSolver::set_source_parameters(const std::vector<CDOUBLE> &_sp) {
     m_is_solved = false;
 }
 
+void HelmholtzSolver::set_rhs_vector(const dealii::Vector<CDOUBLE> &_rhs_vec) {
+    if(get_n_dofs() != _rhs_vec.size()) {
+        std::cout << "ERROR: HelmholtzSolver::set_rhs_vector(): the size of the input vector does not match the number of degrees of freedom. Program will now exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    m_rhs_sol = _rhs_vec;
+    m_use_rhs_vec = true;
+    m_is_solved   = false;
+}
+
+void HelmholtzSolver::disable_rhs_vector() {
+    m_use_rhs_vec = false;
+}
+
 dealii::Vector<CDOUBLE> HelmholtzSolver::get_solution() const {
     if(!m_is_solved) {
         std::cout << "ERROR: HelmholtzSolver::get_solution(): trying to access a solution which has not yet been computed. Program will stop." << std::endl;
@@ -159,10 +174,6 @@ void HelmholtzSolver::assemble_mass_and_stiffness_matrices() {
                 // loop over basis functions
                 for(const auto j: fe_values.dof_indices()) {
                     // // compute local mass matrix
-                    // cell_mass_matrix(i,j) += fe_values.shape_value(j,q)*fe_values.shape_value(i,q)*xq[0]*JxW*sigma;
-                    // // compute the local stiffness matrix
-                    // cell_stiffness_matrix(i,j) += (fe_values.shape_grad(i,q)[1]*fe_values.shape_grad(j,q)[1] + 1.0/(xq[0]*xq[0])*(fe_values.shape_value(i,q)+xq[0]*fe_values.shape_grad(i,q)[0])*(fe_values.shape_value(j,q)+xq[0]*fe_values.shape_grad(j,q)[0]))*xq[0]*JxW*nu;
-
                     // formulation with \tilde A = (r A)
                     // local mass matrix
                     cell_mass_matrix(i,j) += sigma*(fe_values.shape_value(i,q)*fe_values.shape_value(j,q))/xq(0)*JxW;
@@ -220,6 +231,12 @@ void HelmholtzSolver::assemble_rhs() {
         for(const auto i: fe_values.dof_indices()) {
             m_rhs(local_dof_indices[i]) += cell_rhs(i);
         }
+    }
+    // add some "solution vector" to the right-hand-size
+    if(m_use_rhs_vec) {
+        dealii::Vector<CDOUBLE> tmp;
+        m_mass_matrix.vmult(tmp,m_rhs_sol); // apply mass matrix
+        m_rhs.add(m_coef,m_rhs_sol); // add to rhs with scaling
     }
 }
 
