@@ -234,7 +234,7 @@ void HelmholtzSolver::assemble_rhs() {
     }
     // add some "solution vector" to the right-hand-size
     if(m_use_rhs_vec) {
-        dealii::Vector<CDOUBLE> tmp;
+        dealii::Vector<CDOUBLE> tmp(m_dof_handler.n_dofs());
         m_mass_matrix.vmult(tmp,m_rhs_sol); // apply mass matrix
         m_rhs.add(m_coef,m_rhs_sol); // add to rhs with scaling
     }
