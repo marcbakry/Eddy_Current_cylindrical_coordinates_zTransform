@@ -149,9 +149,8 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
     auto obs_cmplx   = std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>>(np,obs_cmplx_0);
     // add non-symmetrical
     for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) { // loop over nonsymmetrical quadrature nodes
-        // auto zn = std::pow(m_z_nonsymmetrical.at(iz),_n); // zn^{_n}
         auto z  = m_z_nonsymmetrical.at(iz);
-        auto zn = pow_z(z,_n);
+        auto zn = std::pow(z,_n);
         // loop over all nodes
         for(auto i=0; i<np; ++i) {
             auto &obs = m_z_observable_nonsymmetrical.at(iz).at(i); // observables corresponding to the i-th node for the iz-th nonsymmetrical z
@@ -164,15 +163,14 @@ std::vector<std::tuple<double,double,double>> ECZTransform::compute_observable_n
     for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) { // loop over symmetrical quadrature nodes
         // auto zn     = std::pow(m_z_symmetrical.at(iz),_n); // zn^{_n}
         auto z  = m_z_symmetrical.at(iz);
-        auto zn = pow_z(z,_n);
-        auto zn_bar = std::conj(zn); // compute complex conjugate of zn
+        auto zn = std::pow(z,_n);
         // loop over all nodes
         for(auto i=0; i<np; ++i) {
             auto &obs = m_z_observable_symmetrical.at(iz).at(i); // observables corresponding to the i-th node for the iz-th symmetrical z
             // compute complex conjugate
-            std::get<0>(obs_cmplx[i]) += std::get<0>(obs)/zn + std::conj(std::get<0>(obs))/zn_bar;
-            std::get<1>(obs_cmplx[i]) += std::get<1>(obs)/zn + std::conj(std::get<1>(obs))/zn_bar;
-            std::get<2>(obs_cmplx[i]) += std::get<2>(obs)/zn + std::conj(std::get<2>(obs))/zn_bar;
+            std::get<0>(obs_cmplx[i]) += 2.0*(std::get<0>(obs)/zn).real();
+            std::get<1>(obs_cmplx[i]) += 2.0*(std::get<1>(obs)/zn).real();
+            std::get<2>(obs_cmplx[i]) += 2.0*(std::get<2>(obs)/zn).real();
         }
     }
     // get real part
@@ -390,5 +388,52 @@ void ECZTransform::write_quadrature_nodes() const {
         ofile << z.real() << ";" << z.imag() << std::endl;
     }
     // 
+    ofile.close();
+}
+
+void ECZTransform::zTransform_validation() const {
+    // reference signal: step function
+    auto tf_mid = m_tf/2.0;
+    auto signal = std::vector<CDOUBLE>(m_nt+1,CDOUBLE(0.0,0.0));
+    for(auto it=0; it<=m_nt; ++it) {
+        // if(it*m_dt<=tf_mid) signal[it] = CDOUBLE(1.0,0.0);
+        // else break;
+        if(it == 0) signal[it] = CDOUBLE(1.0,0.0);
+        else signal[it] = CDOUBLE(std::sin(4.5*2*std::acos(-1.0)*it*m_dt/m_tf)/(4.5*2*std::acos(-1.0)*it*m_dt/m_tf),0.0);
+    }
+    // // forward transform
+    auto zts_sym   = std::vector<CDOUBLE>(m_z_symmetrical.size(),CDOUBLE(0.0,0.0));
+    auto zts_nosym = std::vector<CDOUBLE>(m_z_nonsymmetrical.size(),CDOUBLE(0.0,0.0));
+    if(2*zts_sym.size() + zts_nosym.size() != m_nz) {
+        std::cout << "ERROR: ECZTransform::zTransform_validation(): sum of symmetrical and non symmetrical quadrature do not match the size of the quadrature. Program will exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    for(auto iz=0; iz<m_z_symmetrical.size(); ++iz) {
+        for(auto it=0; it<=m_nt; ++it) zts_sym[iz] += signal.at(it)*std::pow(m_z_symmetrical.at(iz),it);
+    }
+    for(auto iz=0; iz<m_z_nonsymmetrical.size(); ++iz) {
+        for(auto it=0; it<=m_nt; ++it) zts_nosym[iz] += signal.at(it)*std::pow(m_z_nonsymmetrical.at(iz),it);
+    }
+    // backward transform
+    auto signal_backward = std::vector<CDOUBLE>(m_nt+1,CDOUBLE(0.0,0.0));
+    for(auto it=0; it<=m_nt; ++it) {
+        // symmetrical values
+        for(auto iz=0; iz<zts_sym.size(); ++iz) signal_backward[it] += 2.0*(zts_sym.at(iz)/std::pow(m_z_symmetrical.at(iz),it)).real();
+        // non symmetrical values
+        for(auto iz=0; iz<zts_nosym.size(); ++iz) signal_backward[it] += zts_nosym.at(iz)/std::pow(m_z_nonsymmetrical.at(iz),it);
+        // 
+        signal_backward[it] /= static_cast<double>(m_nz);
+    }
+    // write to output
+    std::string filename("../output/validation_ztransform.csv");
+    std::ofstream ofile;
+    ofile.open(filename);
+    if(!ofile.is_open()) {
+        std::cout << "ERROR: ECZTransform::zTransform_validation(): could not open file '" << filename << "'. The program will exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+    // write
+    for(auto it=0; it<=m_nt; ++it) ofile << it*m_dt << ";" << signal.at(it).real() << ";" << signal_backward.at(it).real() << std::endl;
+    // close
     ofile.close();
 }

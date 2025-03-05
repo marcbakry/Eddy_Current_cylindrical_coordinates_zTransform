@@ -14,6 +14,9 @@ int main()
     std::cout << "| FOUCAULT EN COORDONNEES CYLINDRIQUES |" << std::endl;
     std::cout << "+--------------------------------------+" << std::endl;
     // creating physical parameters
+    auto mm = 1e-3;
+    auto ms = 1e-3;
+
     auto sigma_air    = 0.0;
     auto sigma_piece  = 5000000.0;
     auto sigma_bobine = 0.0;
@@ -24,6 +27,13 @@ int main()
     auto mu_piece  = mu0*mur;
     auto mu_air    = mu0;
     auto mu_bobine = mu0;
+
+    // computing the equivalent current for a coil with 336 turns and
+    // a cross section of 1.65 mm x 2 mm
+    auto n_turns = 336;
+    auto coil_cross_section = (1.65*mm)*(2*mm);
+    auto J = 1.0; // current intensity in Ampere
+    auto Jcoil = (static_cast<double>(n_turns)*J)/coil_cross_section;
 
     auto phy_pars = std::vector<PhysicalParameters>({
         PhysicalParameters(sigma_piece,1.0/mu_piece),
@@ -36,19 +46,18 @@ int main()
         SourceParameters({0.0},{0.0}), // plate
         SourceParameters({0.0},{0.0}), // air
         SourceParameters({0.0},{0.0}), // lower coil == air in our configuration
-        SourceParameters({-1.0},{0.0}), // upper coil
+        SourceParameters({-Jcoil},{0.0}), // upper coil
     });
     // run the computation
     try
     {
-        auto mm = 1e-3;
-        auto ms = 1e-3;
         auto nt = 300;
         auto tf = 0.5*ms;
         auto nz = 4*nt;
         auto r  = 1.0;
         // observation nodes
         auto obsp = std::vector<dealii::Point<2>>({dealii::Point<2>(4.65*mm,-3.0*mm)});
+        // auto obsp = std::vector<dealii::Point<2>>({dealii::Point<2>(0.25*mm,-2.5*mm)});
         // initialize the solver
         auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true,false);
         // run computations

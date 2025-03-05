@@ -37,6 +37,8 @@ public:
     void set_integration_radius(double _lambda);
 
     void set_output_file_name(std::string _oname);
+    
+    void zTransform_validation() const;
 
 private:
 
