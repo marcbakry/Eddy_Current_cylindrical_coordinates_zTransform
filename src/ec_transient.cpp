@@ -10,15 +10,6 @@ ECTransient::ECTransient(int _nt, double _tf, std::vector<PhysicalParameters> &_
     initialize();
 }
 
-void ECTransient::display_solver_info() const {
-    // 
-    std::cout << "- Time span         : " << m_tf << " (s)" << std::endl;
-    std::cout << "- Time step         : " << m_dt << " (s)" << std::endl;
-    std::cout << "- Nb. of time steps : " << m_nt << std::endl;
-    std::cout << "- Nb. of obs. points: " << m_observation_points.size() << std::endl;
-    std::cout << "Warning: this solver uses internally a complex Helmholtz solver which is less efficient from the RAM perspective." << std::endl;
-}
-
 // -------
 // METHODS
 // -------
@@ -37,6 +28,47 @@ void ECTransient::run() {
     }
     // 
     m_is_computed = true;
+}
+
+void ECTransient::display_solver_info() const {
+    // 
+    std::cout << "- Time span         : " << m_tf << " (s)" << std::endl;
+    std::cout << "- Time step         : " << m_dt << " (s)" << std::endl;
+    std::cout << "- Nb. of time steps : " << m_nt << std::endl;
+    std::cout << "- Nb. of obs. points: " << m_observation_points.size() << std::endl;
+    std::cout << "Warning: this solver uses internally a complex Helmholtz solver which is less efficient from the RAM perspective." << std::endl;
+}
+
+// -------
+// SETTERS
+// -------
+void ECTransient::set_n_time_steps(int _nt) {
+    m_nt = _nt;
+    compute_time_step();
+}
+
+void ECTransient::set_final_time(double _tf) {
+    m_tf = _tf;
+    compute_time_step();
+}
+
+void ECTransient::set_output_file_name(std::string _oname) {
+    m_oname = _oname;
+}
+
+// -------
+// GETTERS
+// -------
+int ECTransient::get_n_time_steps() const {
+    return m_nt;
+}
+
+double ECTransient::get_final_time() const {
+    return m_tf;
+}
+
+double ECTransient::get_time_step() const {
+    return m_dt;
 }
 
 // -----------

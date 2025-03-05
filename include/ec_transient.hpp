@@ -28,6 +28,8 @@ public: // public functions
     // setters
     void set_n_time_steps(int _nt);
     void set_final_time(double _tf);
+    
+    void set_output_file_name(std::string _oname);
 
 private: // private functions
     // inner tools
