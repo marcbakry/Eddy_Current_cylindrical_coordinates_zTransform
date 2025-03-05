@@ -4,8 +4,10 @@
 #include "physical_parameters.hpp"
 #include "source_parameters.hpp"
 #include"ec_ztransform.hpp"
+#include "ec_transient.hpp"
 
 void run_computation(ECZTransform &_eczt, int _nt, int _nz, std::string _output_folder);
+void run_transient_computation(ECTransient &_ect, int _nt, std::string _output_folder);
 
 int main()
 {
@@ -61,8 +63,12 @@ int main()
         // initialize the solver
         auto eczt = ECZTransform(nt,tf,nz,r,phy_pars,source_pars,obsp,true,false);
         // run computations
-        for(auto coef: {2}) run_computation(eczt,nt,coef*nt,"../output/");
+        // for(auto coef: {2}) run_computation(eczt,nt,coef*nt,"../output/");
         // for(auto coef: {1,2,4,6}) run_computation(eczt,nt,coef*nt,"../output/");
+
+        // transient computation
+        auto ect = ECTransient(nt,tf,phy_pars,source_pars,obsp,true);
+        run_transient_computation(ect,nt,"../output/");
     }
     catch(const std::exception& e)
     {
@@ -87,6 +93,22 @@ void run_computation(ECZTransform &_eczt, int _nt, int _nz, std::string _output_
     std::cout << "----------------------------------------------------------------" << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     _eczt.run();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+    std::cout << "COMPUTATION TIME: " << duration.count() << " (s)" << std::endl;
+    std::cout << "----------------------------------------------------------------" << std::endl;
+}
+
+void run_transient_computation(ECTransient &_ect, int _nt, std::string _output_folder) {
+    // 
+    _ect.set_n_time_steps(_nt);
+    // build output name
+    auto oname = _output_folder + "/fields_nt" + std::to_string(_nt);
+    _ect.set_output_file_name(oname);
+    // run 
+    std::cout << "----------------------------------------------------------------" << std::endl;
+    auto start = std::chrono::high_resolution_clock::now();
+    _ect.run();
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
     std::cout << "COMPUTATION TIME: " << duration.count() << " (s)" << std::endl;

@@ -21,7 +21,8 @@ void ECTransient::run() {
         std::exit(EXIT_FAILURE);
     }
     // 
-    for(auto it=0; it<=m_nt; ++it){
+    for(auto it=1; it<=m_nt; ++it){
+        std::cout << "- " << it << " / " << m_nt << std::endl;
         auto t = it*m_dt; // current time
         auto [sol,obs] = execute_time_step(it);
         m_time_solution.push_back(sol); m_time_observable.push_back(obs);
