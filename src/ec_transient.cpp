@@ -29,6 +29,8 @@ void ECTransient::run() {
     }
     // 
     m_is_computed = true;
+    // 
+    write_observables();
 }
 
 void ECTransient::display_solver_info() const {
