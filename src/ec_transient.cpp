@@ -90,6 +90,10 @@ std::tuple<dealii::Vector<CDOUBLE>,std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBL
     for(auto i=0; i<sp.size(); ++i) {
         sp[i] = CDOUBLE(m_source_pars.at(i).compute(_it*m_dt),0.0);
     }
+    if(m_time_solution.size() == 0) {
+        std::cout << "ERROR: ECTransient::execute_time_step(): invalid size for the vector of solutions: size = " << m_time_solution.size() << ". Program will now exit..." << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
     m_hs.set_source_parameters(sp);
     // second, set solution from previous time step
     m_hs.set_rhs_vector(m_time_solution.at(_it-1));
