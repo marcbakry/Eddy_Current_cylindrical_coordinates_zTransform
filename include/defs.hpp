@@ -2,6 +2,7 @@
 #define DEFS_HPP
 
 #include <complex>
+#include <limits>
 
 typedef std::complex<double> CDOUBLE;
 

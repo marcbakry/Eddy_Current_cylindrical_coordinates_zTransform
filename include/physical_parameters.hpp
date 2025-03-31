@@ -3,8 +3,10 @@
 
 struct PhysicalParameters
 {
-    double sigma = 1000.0; // conductivity
-    double nu    = 1.0;    // reluctance
+    // double sigma = 1000.0; // conductivity
+    // double nu    = 1.0;    // reluctance
+    double sigma; // conductivity
+    double nu;    // reluctance
 
     PhysicalParameters(const double _sigma, const double _nu);
 };

@@ -13,12 +13,14 @@
 class HelmholtzSolver {
 public:
     HelmholtzSolver(): m_fe(2), m_dof_handler(m_triangulation), m_print_mesh(false), m_coef(CDOUBLE(0.0,0.0)) {}
-    HelmholtzSolver(std::vector<PhysicalParameters> &_ppars, std::vector<CDOUBLE> &_spars, CDOUBLE _coef=CDOUBLE(0.0,0.0), bool _print_mesh=false);
+    HelmholtzSolver(const std::vector<PhysicalParameters> &_ppars, const std::vector<CDOUBLE> &_spars, const CDOUBLE _coef=CDOUBLE(0.0,0.0), bool _print_mesh=false);
 
     // setters
     void set_print_mesh(bool _pm);
     void set_coef(CDOUBLE _c);
     void set_source_parameters(const std::vector<CDOUBLE> &_sp);
+    void set_rhs_vector(const dealii::Vector<CDOUBLE> &_rhs_vec);
+    void disable_rhs_vector();
 
     // getters
     dealii::Vector<CDOUBLE> get_solution() const;
@@ -26,7 +28,7 @@ public:
 
     // others
     void run();
-    std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> compte_A_and_B_at(std::vector<dealii::Point<2>> &_points); // compute the potential A and the magnetic field B for multiple points
+    std::vector<std::tuple<CDOUBLE,CDOUBLE,CDOUBLE>> compute_A_and_B_at(std::vector<dealii::Point<2>> &_points); // compute the potential A and the magnetic field B for multiple points
 
 private: // private functions
     void print_mesh_info() const;
@@ -50,6 +52,7 @@ private:
     dealii::SparseMatrix<CDOUBLE> m_lhs; // left-hand-side
     dealii::Vector<CDOUBLE> m_rhs; // right-hand-side
     dealii::Vector<CDOUBLE> m_sol; // solution
+    dealii::Vector<CDOUBLE> m_rhs_sol; // vector to be used in the right-hand-size
 
     // other attributes
     CDOUBLE m_coef; // coefficient
@@ -58,6 +61,7 @@ private:
 
     bool m_print_mesh; // print mesh for debug or not
     bool m_is_solved;
+    bool m_use_rhs_vec;
 };
 
 #endif
