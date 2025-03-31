@@ -6,10 +6,10 @@ set(CMAKE_VERBOSE_MAKEFILE FALSE)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Release)
 
-set(DEAL_II_DIR "D:/Documents/Programmation/CPP/libs/libdealii/lib/cmake/deal.II")
+set(DEAL_II_DIR "E:/Documents/Programmation/CPP/libs/libdealii/lib/cmake/deal.II")
 set(TBB_PATH "C:/Program Files\ (x86)/Intel/oneAPI/tbb/latest")
 set(TBB_CMAKE_DIR "C:/Program Files\ (x86)/Intel/oneAPI/tbb/latest/lib/cmake/tbb")
-set(MUMPS_DIR "D:/Documents/Programmation/CPP/libs/libmumps/cmake")
+# set(MUMPS_DIR "D:/Documents/Programmation/CPP/libs/libmumps/cmake")
 
 find_package(deal.II 9.6.2 REQUIRED HINTS ${DEAL_II_DIR})
 
@@ -33,6 +33,7 @@ project(eddy_solver LANGUAGES CXX)
 
 find_package(TBB HINTS TBB_CMAKE_DIR)
 
+
 add_executable(exe_eddy_solveur ./src/main.cpp)
 target_sources(exe_eddy_solveur PUBLIC ./src/ec_ztransform.cpp ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
 # target_sources(exe_eddy_solveur PUBLIC ./src/helmholtz_solver.cpp ./src/physical_parameters.cpp ./src/source_parameters.cpp)
@@ -43,10 +44,12 @@ deal_ii_setup_target(exe_eddy_solveur)
 TARGET_LINK_LIBRARIES(exe_eddy_solveur TBB::tbb)
 
 if(WIN32)
+    set(MKL_PATH C:/Program\ Files\ \(x86\)/Intel/oneAPI/mkl/latest)
     set_property(TARGET exe_eddy_solveur PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     # add_custom_target(link_dll ALL COMMAND ${CMAKE_COMMAND} -E create_hardlink "${TBB_PATH}/bin/tbb12.dll" "${eddy_solver_BINARY_DIR}/tbb12.dll")
     # file(CREATE_LINK "${TBB_PATH}/bin/tbb12.dll" "${eddy_solver_BINARY_DIR}/tbb12.dll")
     add_custom_command(TARGET exe_eddy_solveur POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${TBB_PATH}/bin/tbb12.dll" ${eddy_solver_BINARY_DIR})
+    add_custom_command(TARGET exe_eddy_solveur POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${MKL_PATH}/bin/mkl_rt.2.dll" ${eddy_solver_BINARY_DIR})
 endif()
 
 # if(WIN32)
